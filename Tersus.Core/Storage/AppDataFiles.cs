@@ -29,6 +29,24 @@ public sealed class AppDataFiles(AppPaths paths)
         }
     }
 
+    /// <summary>Writes a binary file (for example a smoke-test screenshot) atomically, inside the data folder only.</summary>
+    public void WriteAllBytesAtomic(string path, byte[] content)
+    {
+        EnsureInsideDataDirectory(path);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        string temp = path + ".tmp-" + Guid.NewGuid().ToString("N")[..8];
+        File.WriteAllBytes(temp, content);
+        try
+        {
+            File.Move(temp, path, overwrite: true);
+        }
+        catch
+        {
+            TryDeleteOwnFile(temp);
+            throw;
+        }
+    }
+
     /// <summary>Appends one line to a log file inside the data folder.</summary>
     public void AppendLine(string path, string line)
     {

@@ -45,22 +45,7 @@ public sealed class TempDir : IDisposable
         {
             if (Directory.Exists(Path))
             {
-                // Clear attributes first so read-only test files do not block cleanup.
-                foreach (string f in Directory.EnumerateFiles(Path, "*", SearchOption.AllDirectories))
-                {
-                    try
-                    {
-                        File.SetAttributes(f, FileAttributes.Normal);
-                    }
-                    catch (IOException)
-                    {
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                    }
-                }
-
-                Directory.Delete(Path, recursive: true);
+                DeleteTreeWithoutFollowingLinks(Path);
             }
         }
         catch (IOException)
@@ -69,5 +54,47 @@ public sealed class TempDir : IDisposable
         catch (UnauthorizedAccessException)
         {
         }
+    }
+
+    /// <summary>
+    /// Removes a directory tree WITHOUT ever following a symbolic link or junction (a link is removed itself, its target is untouched),
+    /// so a symlink loop can never make the cleanup run away or reach outside the scratch folder.
+    /// </summary>
+    private static void DeleteTreeWithoutFollowingLinks(string dir)
+    {
+        foreach (FileSystemInfo entry in new DirectoryInfo(dir).EnumerateFileSystemInfos())
+        {
+            try
+            {
+                if ((entry.Attributes & FileAttributes.ReparsePoint) != 0)
+                {
+                    if (entry is DirectoryInfo)
+                    {
+                        Directory.Delete(entry.FullName, recursive: false);
+                    }
+                    else
+                    {
+                        File.Delete(entry.FullName);
+                    }
+                }
+                else if (entry is DirectoryInfo sub)
+                {
+                    DeleteTreeWithoutFollowingLinks(sub.FullName);
+                }
+                else
+                {
+                    File.SetAttributes(entry.FullName, FileAttributes.Normal);
+                    File.Delete(entry.FullName);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
+        Directory.Delete(dir, recursive: false);
     }
 }

@@ -188,7 +188,10 @@ public class StorageScannerTests
             Assert.Skip("Cannot create symbolic links in this environment: " + ex.Message);
         }
 
-        ScanResult r = Scan(t.Path);
+        // The scan runs on its own task with a deadline so a link loop would show up as "the scan hung", not as a mystery timeout.
+        Task<ScanResult> task = Task.Run(() => Scan(t.Path));
+        Assert.True(task.Wait(TimeSpan.FromSeconds(60)), "the scan did not finish in 60 s: it is following a link loop");
+        ScanResult r = task.Result;
         Assert.True(r.Completed);
         Assert.Equal(10L, r.TotalBytes);
         Assert.Equal(1L, r.FileCount);
