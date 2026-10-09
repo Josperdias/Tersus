@@ -142,7 +142,7 @@
                                                     <ColumnDefinition Width="80" />
                                                     <ColumnDefinition Width="56" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Label}" Style="{StaticResource Body}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                                <TextBlock Text="{Binding Label}" Style="{StaticResource Body}" TextWrapping="Wrap" />
                                                 <TextBlock Grid.Column="1" Text="{Binding SizeText}" Style="{StaticResource Body}" HorizontalAlignment="Right" />
                                                 <TextBlock Grid.Column="2" Text="{Binding PercentText}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
                                             </Grid>

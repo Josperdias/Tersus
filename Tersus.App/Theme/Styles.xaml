@@ -432,9 +432,15 @@
 
     <!-- Two-pane pages (list + details). Wide: side by side. Narrow (below TwoPane.Breakpoint of the wrapping ScrollViewer): the details go
          under the list and the pane area scrolls as a whole. The panes must not set Margin, Grid.Column or Grid.Row locally (a local value would win). -->
-    <!-- Text cell of a table that wraps instead of clipping (long outcome messages and folder paths). -->
+    <!-- Text cell of a table that wraps instead of clipping (long outcome messages: nothing may be hidden). -->
     <Style x:Key="WrapCell" TargetType="TextBlock">
         <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <!-- Text cell that is cut with an ellipsis when the column is narrow; the full text is in the tooltip. -->
+    <Style x:Key="TrimCell" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
     </Style>
     <Style x:Key="TwoPaneScroll" TargetType="ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />

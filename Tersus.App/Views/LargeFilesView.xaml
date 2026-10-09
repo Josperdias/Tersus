@@ -66,9 +66,9 @@
                         </DataGrid.Style>
                         <!-- The full folder is shown in the details pane next to the list; keeping the columns few keeps the size readable. -->
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name}" Width="*" MinWidth="100" SortMemberPath="Name" />
+                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name}" Width="2*" MinWidth="100" SortMemberPath="Name" ElementStyle="{StaticResource TrimCell}" />
                             <DataGridTextColumn Header="Tamanho" Binding="{Binding Bytes, Converter={StaticResource BytesText}}" Width="86" SortMemberPath="Bytes" />
-                            <DataGridTextColumn Header="Tipo" Binding="{Binding CategoryLabel}" Width="112" SortMemberPath="CategoryLabel" />
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding CategoryLabel}" Width="*" MinWidth="70" SortMemberPath="CategoryLabel" ElementStyle="{StaticResource TrimCell}" />
                             <DataGridTextColumn Header="Modificado" Binding="{Binding Modified, StringFormat=dd/MM/yyyy}" Width="100" SortMemberPath="Modified" />
                         </DataGrid.Columns>
                     </DataGrid>

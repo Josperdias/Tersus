@@ -28,8 +28,8 @@
         <DataGrid Grid.Row="2" ItemsSource="{Binding View}" SelectedItem="{Binding Selected, Mode=TwoWay}" CanUserSortColumns="False"
                   EnableRowVirtualization="True" AutomationProperties.Name="Programas instalados">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Programa" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="170" />
-                <DataGridTextColumn Header="Editora" Binding="{Binding Publisher, Mode=OneWay}" Width="1.3*" MinWidth="120" />
+                <DataGridTextColumn Header="Programa" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="170" ElementStyle="{StaticResource TrimCell}" />
+                <DataGridTextColumn Header="Editora" Binding="{Binding Publisher, Mode=OneWay}" Width="1.3*" MinWidth="120" ElementStyle="{StaticResource TrimCell}" />
                 <DataGridTextColumn Header="Versão" Binding="{Binding Version, Mode=OneWay}" Width="112" />
                 <DataGridTextColumn Header="Instalado em" Binding="{Binding InstallDateText, Mode=OneWay}" Width="116" />
                 <DataGridTextColumn Header="Tamanho informado" Binding="{Binding SizeText, Mode=OneWay}" Width="160" />

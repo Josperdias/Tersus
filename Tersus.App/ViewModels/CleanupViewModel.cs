@@ -37,7 +37,8 @@ public sealed class CandidateRow(CleanupCandidate candidate, Action<CandidateRow
 
     public string Name => Candidate.Name;
 
-    public string Where => Candidate.RelativePath;
+    // The folder inside TEMP (the file name has its own column).
+    public string Where => System.IO.Path.GetDirectoryName(Candidate.RelativePath) is { Length: > 0 } folder ? folder : "(raiz da pasta TEMP)";
 
     public long Bytes => Candidate.Length;
 

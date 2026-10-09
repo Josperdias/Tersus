@@ -6,7 +6,8 @@
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
         Background="{DynamicResource PageBg}" FontFamily="{StaticResource UiFont}"
         AutomationProperties.Name="Confirmação para enviar arquivos temporários à Lixeira">
-    <!-- The buttons live OUTSIDE the scrolling part: on a small screen the text scrolls, but "Cancelar" and "Mover para a Lixeira" are always reachable. -->
+    <!-- The checkbox and the buttons live OUTSIDE the scrolling part: on a small screen the text scrolls, but the box that unlocks "Mover para a Lixeira"
+         and both buttons are always in view. -->
     <Grid Background="{DynamicResource PageBg}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -32,7 +33,7 @@
                 <Border Style="{StaticResource Card}" Margin="0,12,0,12" Padding="10">
                     <StackPanel>
                         <TextBlock Text="Primeiros arquivos da lista" Style="{StaticResource Muted}" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto" Focusable="False">
+                        <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto" Focusable="False">
                             <ItemsControl x:Name="PreviewList" Focusable="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -51,22 +52,23 @@
                         <TextBlock x:Name="MoreText" Style="{StaticResource Muted}" Margin="0,4,0,0" />
                     </StackPanel>
                 </Border>
-
-                <CheckBox x:Name="AckBox" Margin="0,0,0,8"
-                          AutomationProperties.Name="Confirmo que entendi que os arquivos serão enviados à Lixeira do Windows">
-                    <TextBlock Style="{StaticResource Body}"
-                               Text="Entendi: estes arquivos serão enviados à Lixeira do Windows e eu posso restaurá-los de lá." />
-                </CheckBox>
             </StackPanel>
         </ScrollViewer>
 
         <Border Grid.Row="1" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="24,12">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="CancelButton" Style="{StaticResource SecondaryButton}" Content="Cancelar (nada será alterado)"
-                        IsDefault="True" IsCancel="True" Click="OnCancel" />
-                <Button x:Name="ConfirmButton" Style="{StaticResource WarnButton}" Content="Mover para a Lixeira" Margin="0"
-                        IsEnabled="{Binding IsChecked, ElementName=AckBox}" Click="OnConfirm"
-                        AutomationProperties.HelpText="Só habilita depois de marcar a caixa de confirmação" />
+            <StackPanel>
+                <CheckBox x:Name="AckBox" Margin="0,0,0,12"
+                          AutomationProperties.Name="Confirmo que entendi que os arquivos serão enviados à Lixeira do Windows">
+                    <TextBlock Style="{StaticResource Body}"
+                               Text="Entendi: estes arquivos serão enviados à Lixeira do Windows e eu posso restaurá-los de lá." />
+                </CheckBox>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" Style="{StaticResource SecondaryButton}" Content="Cancelar (nada será alterado)"
+                            IsDefault="True" IsCancel="True" Click="OnCancel" />
+                    <Button x:Name="ConfirmButton" Style="{StaticResource WarnButton}" Content="Mover para a Lixeira" Margin="0"
+                            IsEnabled="{Binding IsChecked, ElementName=AckBox}" Click="OnConfirm"
+                            AutomationProperties.HelpText="Só habilita depois de marcar a caixa de confirmação" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

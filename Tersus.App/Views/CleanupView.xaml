@@ -110,11 +110,11 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="140" />
+                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="140" ElementStyle="{StaticResource TrimCell}" />
                             <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText, Mode=OneWay}" Width="88" />
                             <DataGridTextColumn Header="Idade" Binding="{Binding AgeText, Mode=OneWay}" Width="82" />
                             <DataGridTextColumn Header="Modificado" Binding="{Binding Modified, StringFormat=dd/MM/yyyy, Mode=OneWay}" Width="104" />
-                            <DataGridTextColumn Header="Pasta na TEMP" Binding="{Binding Where, Mode=OneWay}" Width="1.2*" MinWidth="110" ElementStyle="{StaticResource WrapCell}" />
+                            <DataGridTextColumn Header="Pasta na TEMP" Binding="{Binding Where, Mode=OneWay}" Width="1.2*" MinWidth="110" ElementStyle="{StaticResource TrimCell}" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,8,0,0" Text="{Binding SelectionText}" />

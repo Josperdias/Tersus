@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -373,6 +374,9 @@ internal sealed class SmokeRunner
                 Check(PathStartsWith(row.Candidate.Path, _o.CleanupFolder), "candidato fora da pasta de teste: " + row.Candidate.Path);
             }
 
+            CommandManager.InvalidateRequerySuggested();
+            await Settle();
+            Check(ButtonFor(_vm.Cleanup.SimulateCommand) is { IsVisible: true, IsEnabled: true }, "o botão “Simular” deveria estar visível e habilitado na tela de revisão");
             await Shot("limpeza-revisao", "cleanup");
         });
 
@@ -405,6 +409,10 @@ internal sealed class SmokeRunner
                 Check(File.Exists(p), "a simulação não pode mexer em arquivos, mas sumiu: " + p);
             }
 
+            // The command is re-evaluated on input events; the harness has none, so ask for it, then check the REAL button the person would click.
+            CommandManager.InvalidateRequerySuggested();
+            await Settle();
+            Check(ButtonFor(_vm.Cleanup.RecycleCommand) is { IsVisible: true, IsEnabled: true }, "o botão “Mover para a Lixeira…” deveria estar visível e habilitado depois da simulação");
             await Shot("limpeza-simulacao", "cleanup");
 
             // Changing the selection after a simulation must throw the plan away.
@@ -439,7 +447,18 @@ internal sealed class SmokeRunner
                 await Settle();
                 Check(!win.ConfirmControl.IsEnabled, "desmarcar a caixa deve desabilitar o botão de novo");
                 Check(!win.Confirmed, "a janela não pode estar confirmada sem clique");
-                await Shot("limpeza-confirmacao", "confirm", win.Content as FrameworkElement);
+                FrameworkElement root = (FrameworkElement)win.Content;
+                foreach ((string name, FrameworkElement element) in new (string, FrameworkElement)[]
+                         {
+                             ("a caixa de confirmação", win.AcknowledgeBox),
+                             ("“Cancelar”", win.CancelControl),
+                             ("“Mover para a Lixeira”", win.ConfirmControl),
+                         })
+                {
+                    Check(IsWithin(element, root), $"{name} precisa aparecer inteiro na janela de confirmação, sem depender de rolagem");
+                }
+
+                await Shot("limpeza-confirmacao", "confirm", root);
             }
             finally
             {
@@ -557,6 +576,15 @@ internal sealed class SmokeRunner
 
     private static bool PathStartsWith(string path, string folder) =>
         path.StartsWith(folder.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
+    private Button? ButtonFor(ICommand command) =>
+        UiTree.Of<Button>(_window.Host).FirstOrDefault(b => ReferenceEquals(b.Command, command));
+
+    private static bool IsWithin(FrameworkElement element, FrameworkElement container)
+    {
+        Rect box = element.TransformToAncestor(container).TransformBounds(new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+        return element.IsVisible && box.Left >= -0.5 && box.Top >= -0.5 && box.Right <= container.ActualWidth + 0.5 && box.Bottom <= container.ActualHeight + 0.5;
+    }
 
     private async Task Settle(int milliseconds = 150)
     {
