@@ -115,10 +115,11 @@ jobs:
           if (-not (Test-Path -LiteralPath $iscc)) { choco install innosetup --no-progress -y }
           if (-not (Test-Path -LiteralPath $iscc)) { throw 'ISCC.exe não encontrado' }
           "iscc=$iscc" | Add-Content -Path $env:GITHUB_OUTPUT
-          $banner = (& $iscc '/?' 2>&1 | Out-String)
-          $inno = if ($banner -match 'Inno Setup\s+([0-9][0-9.]*)') { $Matches[1] } else { 'desconhecida' }
+          $uninstallKey = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1'
+          $inno = if (Test-Path -LiteralPath $uninstallKey) { [string](Get-ItemProperty -LiteralPath $uninstallKey).DisplayVersion } else { 'desconhecida' }
           "inno=$inno" | Add-Content -Path $env:GITHUB_OUTPUT
           "Inno Setup: $inno"
+          $global:LASTEXITCODE = 0
 
       - name: Gerar o instalador (por usuário, sem administrador)
         shell: pwsh
