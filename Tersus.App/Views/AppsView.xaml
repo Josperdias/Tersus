@@ -18,6 +18,7 @@
 
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">
             <TextBox Width="260" Margin="0,0,10,6" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Tag="Buscar por nome ou editora…"
                      AutomationProperties.Name="Filtrar por nome ou editora" ToolTip="Filtrar por nome ou editora" />
             <ComboBox Width="270" Margin="0,0,10,6" ItemsSource="{Binding SortLabels}" SelectedIndex="{Binding SortIndex, Mode=TwoWay}" AutomationProperties.Name="Ordenar a lista" />
             <Button Style="{StaticResource SecondaryButton}" Content="Atualizar" Command="{Binding RefreshCommand}" />
@@ -27,18 +28,23 @@
         <DataGrid Grid.Row="2" ItemsSource="{Binding View}" SelectedItem="{Binding Selected, Mode=TwoWay}" CanUserSortColumns="False"
                   EnableRowVirtualization="True" AutomationProperties.Name="Programas instalados">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Programa" Binding="{Binding Name, Mode=OneWay}" Width="260" />
-                <DataGridTextColumn Header="Editora" Binding="{Binding Publisher, Mode=OneWay}" Width="190" />
-                <DataGridTextColumn Header="Versão" Binding="{Binding Version, Mode=OneWay}" Width="110" />
-                <DataGridTextColumn Header="Instalado em" Binding="{Binding InstallDateText, Mode=OneWay}" Width="105" />
-                <DataGridTextColumn Header="Tamanho informado" Binding="{Binding SizeText, Mode=OneWay}" Width="140" />
-                <DataGridTextColumn Header="Local" Binding="{Binding Location, Mode=OneWay}" Width="*" />
+                <DataGridTextColumn Header="Programa" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="170" />
+                <DataGridTextColumn Header="Editora" Binding="{Binding Publisher, Mode=OneWay}" Width="1.3*" MinWidth="120" />
+                <DataGridTextColumn Header="Versão" Binding="{Binding Version, Mode=OneWay}" Width="112" />
+                <DataGridTextColumn Header="Instalado em" Binding="{Binding InstallDateText, Mode=OneWay}" Width="116" />
+                <DataGridTextColumn Header="Tamanho informado" Binding="{Binding SizeText, Mode=OneWay}" Width="160" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <WrapPanel Grid.Row="3" Margin="0,10,0,0">
-            <Button Style="{StaticResource SecondaryButton}" Content="Abrir pasta do programa selecionado" Command="{Binding ExplorerCommand}" />
-            <ProgressBar IsIndeterminate="True" Width="160" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-        </WrapPanel>
+        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+            <!-- The install folder is shown here (not as a table column) so the table keeps room for the sizes and dates. -->
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,8" Text="{Binding Selected.Location, StringFormat='Local: {0}'}"
+                       TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding Selected.Location}"
+                       Visibility="{Binding Selected.Location, Converter={StaticResource NullToVis}}" />
+            <WrapPanel>
+                <Button Style="{StaticResource SecondaryButton}" Content="Abrir pasta do programa selecionado" Command="{Binding ExplorerCommand}" />
+                <ProgressBar IsIndeterminate="True" Width="160" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+            </WrapPanel>
+        </StackPanel>
     </Grid>
 </UserControl>

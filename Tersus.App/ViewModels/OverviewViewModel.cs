@@ -151,7 +151,7 @@ public sealed class OverviewViewModel : ObservableObject, IPageActivated
         _current = node;
         CultureInfo c = CultureInfo.CurrentCulture;
         Title = node.FullPath;
-        Subtitle = string.Create(c, $"{SizeText.Format(node.Bytes, c)}  •  {node.FileCount:N0} arquivos  •  {node.FolderCount:N0} pastas");
+        Subtitle = string.Create(c, $"{SizeText.Format(node.Bytes, c)}  •  {Plural.Files(node.FileCount, c)}  •  {Plural.Folders(node.FolderCount, c)}");
 
         Breadcrumbs.Clear();
         var chain = new List<SizeNode>();
@@ -180,7 +180,7 @@ public sealed class OverviewViewModel : ObservableObject, IPageActivated
                 Name = child.Name,
                 Bytes = child.Bytes,
                 Fraction = child.Bytes / total,
-                Detail = string.Create(c, $"{child.FileCount:N0} arquivos • {child.FolderCount:N0} pastas"),
+                Detail = string.Create(c, $"{Plural.Files(child.FileCount, c)} • {Plural.Folders(child.FolderCount, c)}"),
                 CanOpen = child.Children.Count > 0,
                 Color = Palette.For(index),
                 Key = key,

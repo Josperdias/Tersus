@@ -571,6 +571,12 @@ internal sealed class SmokeRunner
     {
         FrameworkElement target = element ?? (FrameworkElement)_window.Content;
         target.UpdateLayout();
+        if (target.Margin != default)
+        {
+            // RenderTargetBitmap draws an element at its layout offset, so a margin would shift the picture and crop its right and bottom edges.
+            _layoutWarnings.Add($"[{page}] o elemento fotografado tem margem ({target.Margin}); a captura sairia deslocada e cortada");
+        }
+
         foreach (string clipped in UiTree.Clipped(target).Distinct())
         {
             _layoutWarnings.Add($"[{page}] {clipped}");

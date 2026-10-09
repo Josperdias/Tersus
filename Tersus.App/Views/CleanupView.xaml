@@ -110,11 +110,11 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="210" />
-                            <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText, Mode=OneWay}" Width="90" />
-                            <DataGridTextColumn Header="Idade" Binding="{Binding AgeText, Mode=OneWay}" Width="90" />
-                            <DataGridTextColumn Header="Modificado" Binding="{Binding Modified, StringFormat=dd/MM/yyyy, Mode=OneWay}" Width="100" />
-                            <DataGridTextColumn Header="Onde (dentro da pasta TEMP)" Binding="{Binding Where, Mode=OneWay}" Width="*" />
+                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="2*" MinWidth="140" />
+                            <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText, Mode=OneWay}" Width="88" />
+                            <DataGridTextColumn Header="Idade" Binding="{Binding AgeText, Mode=OneWay}" Width="82" />
+                            <DataGridTextColumn Header="Modificado" Binding="{Binding Modified, StringFormat=dd/MM/yyyy, Mode=OneWay}" Width="104" />
+                            <DataGridTextColumn Header="Pasta na TEMP" Binding="{Binding Where, Mode=OneWay}" Width="1.2*" MinWidth="110" ElementStyle="{StaticResource WrapCell}" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,8,0,0" Text="{Binding SelectionText}" />
@@ -127,7 +127,7 @@
                                Visibility="{Binding CanEditSelection, Converter={StaticResource BoolToVis}}" />
 
                     <!-- Plan (simulation result) -->
-                    <Border Style="{StaticResource BannerWarn}" Margin="0,14,0,0" Visibility="{Binding IsSimulated, Converter={StaticResource BoolToVis}}">
+                    <Border x:Name="PlanCard" Style="{StaticResource BannerWarn}" Margin="0,14,0,0" Visibility="{Binding IsSimulated, Converter={StaticResource BoolToVis}}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionTitle}" Text="Passo 3: conferir e confirmar" />
                             <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{Binding PlanHeadline}" />
@@ -166,7 +166,7 @@
                     <Border Style="{StaticResource BannerDanger}" Margin="0,14,0,0" Visibility="{Binding HasReportWarning, Converter={StaticResource BoolToVis}}">
                         <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{Binding ReportWarning, StringFormat='⚠ {0}'}" />
                     </Border>
-                    <Border Style="{StaticResource BannerOk}" Margin="0,14,0,0">
+                    <Border x:Name="ResultCard" Style="{StaticResource BannerOk}" Margin="0,14,0,0">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionTitle}" Text="Resultado" />
                             <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{Binding ReportHeadline}" />
@@ -185,10 +185,10 @@
                     </Border>
                     <DataGrid Margin="0,14,0,0" Height="260" ItemsSource="{Binding Results}" AutomationProperties.Name="Resultado de cada arquivo">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Resultado" Binding="{Binding OutcomeText, Mode=OneWay}" Width="250" />
-                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="190" />
-                            <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText, Mode=OneWay}" Width="90" />
-                            <DataGridTextColumn Header="Detalhe" Binding="{Binding Message, Mode=OneWay}" Width="*" />
+                            <DataGridTextColumn Header="Resultado" Binding="{Binding OutcomeText, Mode=OneWay}" Width="190" ElementStyle="{StaticResource WrapCell}" />
+                            <DataGridTextColumn Header="Arquivo" Binding="{Binding Name, Mode=OneWay}" Width="1.3*" MinWidth="130" ElementStyle="{StaticResource WrapCell}" />
+                            <DataGridTextColumn Header="Tamanho" Binding="{Binding SizeText, Mode=OneWay}" Width="88" />
+                            <DataGridTextColumn Header="Detalhe" Binding="{Binding Message, Mode=OneWay}" Width="1.3*" MinWidth="120" ElementStyle="{StaticResource WrapCell}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>

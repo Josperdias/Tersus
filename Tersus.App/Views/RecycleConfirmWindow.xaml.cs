@@ -20,6 +20,12 @@ public partial class RecycleConfirmWindow : Window
     public RecycleConfirmWindow(CleanupPlan plan)
     {
         InitializeComponent();
+
+        // Never taller or wider than the screen's work area (small laptops, high Windows scaling): the text scrolls, the buttons stay visible.
+        Rect work = SystemParameters.WorkArea;
+        MaxHeight = Math.Min(MaxHeight, Math.Max(360, work.Height - 32));
+        Width = Math.Min(Width, Math.Max(MinWidth, work.Width - 32));
+
         CultureInfo c = CultureInfo.CurrentCulture;
         HeadlineText.Text = string.Create(c, $"{plan.Approved.Count:N0} arquivo(s) temporário(s) antigo(s) — {ByteSize.Format(plan.ApprovedBytes, c)} (tamanho lógico) — serão ENVIADOS À LIXEIRA do Windows.");
         FactNotPermanent.Text = "•  Nada é apagado de forma permanente: você pode restaurar os arquivos pela Lixeira.";

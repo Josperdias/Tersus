@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
+using Tersus.App.Services;
 using Tersus.Core.History;
 using ByteSize = Tersus.Core.SizeText;
 
@@ -20,7 +21,7 @@ public sealed class SnapshotRow(Snapshot snapshot, double fraction, string delta
 
     public string SizeText => ByteSize.Format(Snapshot.TotalBytes);
 
-    public string FilesText => Snapshot.FileCount.ToString("N0", CultureInfo.CurrentCulture) + " arquivos";
+    public string FilesText => Plural.Files(Snapshot.FileCount);
 
     public double Fraction { get; } = fraction;
 
@@ -181,15 +182,25 @@ public sealed class HistoryViewModel : ObservableObject, IPageActivated
         }
 
         CultureInfo c = CultureInfo.CurrentCulture;
-        string dir = cmp.TotalDelta >= 0 ? "cresceu" : "diminuiu";
-        ComparisonHeadline = string.Create(c, $"Em {Math.Max(0, Math.Round(cmp.Elapsed.TotalDays, 1))} dia(s) este local {dir} {ByteSize.Format(Math.Abs(cmp.TotalDelta), c)} (tamanho lógico). Pastas que mais mudaram:");
         foreach (FolderDelta d in cmp.Folders.Where(f => f.Kind != DeltaKind.Same).Take(15))
         {
             Deltas.Add(new DeltaRow(d));
         }
 
+        string change = cmp.TotalDelta == 0
+            ? "não mudou de tamanho"
+            : string.Create(c, $"{(cmp.TotalDelta > 0 ? "cresceu" : "diminuiu")} {ByteSize.Format(Math.Abs(cmp.TotalDelta), c)}");
+        ComparisonHeadline = string.Create(c, $"Desde a análise anterior (há {ElapsedText(cmp.Elapsed)}), este local {change} (tamanho lógico).")
+            + (Deltas.Count > 0 ? " Pastas que mais mudaram:" : string.Empty);
+
         OnPropertyChanged(nameof(HasDeltas));
     }
+
+    private static string ElapsedText(TimeSpan elapsed) =>
+        elapsed.TotalMinutes < 1 ? "menos de 1 minuto"
+        : elapsed.TotalHours < 1 ? Plural.Of((long)elapsed.TotalMinutes, "minuto", "minutos")
+        : elapsed.TotalDays < 1 ? Plural.Of((long)elapsed.TotalHours, "hora", "horas")
+        : Plural.Of((long)Math.Round(elapsed.TotalDays), "dia", "dias");
 
     private void Clear()
     {

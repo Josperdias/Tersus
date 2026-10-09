@@ -74,6 +74,9 @@
                     <ListBox ItemsSource="{Binding Pages}" SelectedItem="{Binding SelectedPage, Mode=TwoWay}" ItemContainerStyle="{StaticResource NavItem}"
                              Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              AutomationProperties.Name="Navegação principal (Ctrl e 1 a 9)">
+                        <ListBox.Resources>
+                            <Style TargetType="ScrollBar" BasedOn="{StaticResource NavScrollBar}" />
+                        </ListBox.Resources>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
