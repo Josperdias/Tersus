@@ -1,0 +1,11 @@
+# Tersus - registro criado, aguardando a confirmação do usuário
+# Tersus - limpeza em 2026-10-09T21:08:50.9652825Z - plano f27324c5-c604-42db-ba79-dfe5e8c59598 - 7 aprovado(s), 0 recusado(s)
+# Lixeira: Lixeira verificada: um arquivo de teste foi enviado a ela e encontrado com sucesso.
+MovedToRecycleBin	3072	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\velho-2.tmp	None	Enviado à Lixeira.
+MovedToRecycleBin	2048	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\velho-3.temp	None	Enviado à Lixeira.
+MovedToRecycleBin	1500	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\acentuação-ü-日本語.tmp	None	Enviado à Lixeira.
+MovedToRecycleBin	1024	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\velho-1.tmp	None	Enviado à Lixeira.
+MovedToRecycleBin	1024	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\sub\aninhado-1.tmp	None	Enviado à Lixeira.
+MovedToRecycleBin	1024	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\sub\aninhado-2.temp	None	Enviado à Lixeira.
+Skipped	500	C:\Users\runneradmin\AppData\Local\Temp\Tersus-smoke-6a87a7a2\em-uso.tmp	InUse	Em uso por outro programa.
+# Resumo: 6 enviado(s) à Lixeira (9692 bytes lógicos), 1 ignorado(s), 0 com falha

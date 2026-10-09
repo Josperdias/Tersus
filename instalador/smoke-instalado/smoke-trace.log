@@ -1,0 +1,40 @@
+0.59s > Início: janela e unidades
+0.63s < ok: Início: janela e unidades
+0.63s > Análise de armazenamento
+1.01s < ok: Análise de armazenamento
+1.01s > Visão geral e mapa de blocos
+1.62s < ok: Visão geral e mapa de blocos
+1.62s > Maiores arquivos
+2.09s < ok: Maiores arquivos
+2.09s > Duplicados (somente relatório)
+2.53s < ok: Duplicados (somente relatório)
+2.53s > Limpeza: tela e regras
+2.79s < ok: Limpeza: tela e regras
+2.79s > Limpeza: buscar candidatos na pasta de teste
+3.21s < ok: Limpeza: buscar candidatos na pasta de teste
+3.21s > Limpeza: modo por objetivo e seleção personalizada invalidam a simulação
+3.54s < ok: Limpeza: modo por objetivo e seleção personalizada invalidam a simulação
+3.54s > Limpeza: simulação não altera nada
+3.90s < ok: Limpeza: simulação não altera nada
+3.90s > Janela de confirmação: propriedades de segurança
+4.54s < ok: Janela de confirmação: propriedades de segurança
+4.54s > Limpeza: cancelar a confirmação não move nada
+4.75s < ok: Limpeza: cancelar a confirmação não move nada
+4.75s > Limpeza: confirmar move os arquivos elegíveis para a Lixeira
+5.35s < ok: Limpeza: confirmar move os arquivos elegíveis para a Lixeira
+5.35s > Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado
+5.58s < ok: Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado
+5.58s > Aplicativos instalados (leitura)
+5.84s < ok: Aplicativos instalados (leitura)
+5.84s > Histórico (duas análises e comparação)
+6.05s < ok: Histórico (duas análises e comparação)
+6.05s > Recomendações (somente leitura)
+6.27s < ok: Recomendações (somente leitura)
+6.27s > Segurança e sobre
+6.47s < ok: Segurança e sobre
+6.47s > Cancelamento da análise (responde em poucos segundos e não vai ao histórico)
+8.36s < ok: Cancelamento da análise (responde em poucos segundos e não vai ao histórico)
+8.36s > Zoom da interface (140%)
+8.82s < ok: Zoom da interface (140%)
+8.82s > Paleta de alto contraste (troca e volta)
+9.46s < ok: Paleta de alto contraste (troca e volta)
