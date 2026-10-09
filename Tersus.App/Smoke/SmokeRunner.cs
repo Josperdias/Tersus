@@ -217,8 +217,26 @@ internal sealed class SmokeRunner
             _steps.Add(new StepResult("Falha geral do teste de fumaça", false, _clock.Elapsed, ex.ToString()));
         }
 
-        await Settle();
-        bool ok = WriteReport();
+        try
+        {
+            await Settle();
+        }
+        catch (Exception ex)
+        {
+            Trace("Settle final falhou: " + ex);
+        }
+
+        bool ok;
+        try
+        {
+            ok = WriteReport();
+        }
+        catch (Exception ex)
+        {
+            Trace("WriteReport falhou: " + ex);
+            ok = false;
+        }
+
         _watchdog.Dispose();
         return ok ? 0 : 1;
     }
@@ -386,14 +404,30 @@ internal sealed class SmokeRunner
     private async Task Step(string name, Func<Task> body)
     {
         var sw = Stopwatch.StartNew();
+        Trace("> " + name);
         try
         {
             await body();
             _steps.Add(new StepResult(name, true, sw.Elapsed, null));
+            Trace("< ok: " + name);
         }
         catch (Exception ex)
         {
             _steps.Add(new StepResult(name, false, sw.Elapsed, ex is CheckFailedException ? ex.Message : ex.ToString()));
+            Trace("< FALHOU: " + name + " :: " + (ex is CheckFailedException ? ex.Message : ex.ToString()));
+        }
+    }
+
+    /// <summary>Step-by-step trail, flushed as it happens, so a crash still says where it was.</summary>
+    private void Trace(string message)
+    {
+        try
+        {
+            _services.DataFiles.AppendLine(Path.Combine(_o.OutDir, "smoke-trace.log"), string.Create(CultureInfo.InvariantCulture, $"{_clock.Elapsed.TotalSeconds:F2}s {message}"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // The trail is a diagnostic aid only.
         }
     }
 

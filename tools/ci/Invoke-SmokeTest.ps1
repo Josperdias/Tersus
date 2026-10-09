@@ -25,6 +25,18 @@ $OutDir = (Resolve-Path -LiteralPath $OutDir).Path
 
 $failures = New-Object System.Collections.Generic.List[string]
 $rows = New-Object System.Collections.Generic.List[object]
+function Show-Diagnostics {
+    Write-Host '----- diagnóstico: arquivos na pasta de saída do programa -----'
+    Get-ChildItem -LiteralPath $OutDir -Recurse -Force -File -ErrorAction SilentlyContinue |
+        ForEach-Object { Write-Host ('{0,10}  {1}' -f $_.Length, $_.FullName.Substring($OutDir.Length)) }
+    foreach ($name in @('smoke-trace.log', 'smoke-report.md')) {
+        $path = Join-Path $OutDir $name
+        if (Test-Path -LiteralPath $path) { Write-Host "----- $name -----"; Get-Content -LiteralPath $path | ForEach-Object { Write-Host $_ } }
+    }
+    foreach ($e in @(Get-ChildItem -LiteralPath (Join-Path $OutDir 'logs') -Filter 'erro-*.log' -ErrorAction SilentlyContinue)) {
+        Write-Host "----- logs/$($e.Name) -----"; Get-Content -LiteralPath $e.FullName | ForEach-Object { Write-Host $_ }
+    }
+}
 function Check([string]$name, [bool]$ok, [string]$detail = '') {
     $rows.Add([pscustomobject]@{ Check = $name; Result = $(if ($ok) { 'ok' } else { 'FALHOU' }); Detail = $detail })
     if (-not $ok) { $failures.Add("$name $detail") }
@@ -134,7 +146,7 @@ if (Test-Path -LiteralPath $report) {
 }
 $shots = @(Get-ChildItem -LiteralPath (Join-Path $OutDir 'screenshots') -Filter '*.png' -ErrorAction SilentlyContinue)
 Check 'capturas de tela foram geradas' ($shots.Count -ge 12) "$($shots.Count) arquivo(s)"
-Check 'as capturas não estão vazias' (($shots | Where-Object { $_.Length -lt 2000 }).Count -eq 0)
+Check 'as capturas não estão vazias' (@($shots | Where-Object { $_.Length -lt 2000 }).Count -eq 0)
 
 foreach ($d in $decoys) {
     $exists = Test-Path -LiteralPath $d
@@ -229,7 +241,7 @@ if ($env:GITHUB_STEP_SUMMARY) {
 if ($failures.Count -gt 0) {
     Write-Host "::error::$($failures.Count) verificação(ões) falharam"
     $failures | ForEach-Object { Write-Host "  - $_" }
-    if (Test-Path -LiteralPath $report) { Write-Host '----- smoke-report.md -----'; Get-Content -LiteralPath $report }
+    Show-Diagnostics
     exit 1
 }
 Write-Host "Teste de fumaça aprovado: $($rows.Count) verificações independentes ok."
