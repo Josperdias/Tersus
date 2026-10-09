@@ -18,6 +18,9 @@ public sealed class AppPaths
 
     public string LogsDirectory => Path.Combine(DataDirectory, "logs");
 
+    /// <summary>Where the one-per-session Recycle Bin self-test file is created (see ShellRecycler).</summary>
+    public string CanaryDirectory => Path.Combine(DataDirectory, "teste-lixeira");
+
     public void EnsureCreated()
     {
         Directory.CreateDirectory(DataDirectory);

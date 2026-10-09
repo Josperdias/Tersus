@@ -37,6 +37,19 @@ public sealed class AppDataFiles(AppPaths paths)
         File.AppendAllText(path, line + Environment.NewLine, new UTF8Encoding(false));
     }
 
+    /// <summary>
+    /// Creates the tiny self-test file used to prove that the Recycle Bin works before any real file is moved.
+    /// It lives in Tersus' own data folder and is the only file Tersus ever creates outside logs and history.
+    /// </summary>
+    public string CreateCanaryFile(string prefix)
+    {
+        Directory.CreateDirectory(Paths.CanaryDirectory);
+        string path = Path.Combine(Paths.CanaryDirectory, prefix + Guid.NewGuid().ToString("N")[..8] + ".tmp");
+        EnsureInsideDataDirectory(path);
+        File.WriteAllText(path, "Arquivo de teste criado pelo Tersus para verificar a Lixeira do Windows. Pode ser apagado.", new UTF8Encoding(false));
+        return path;
+    }
+
     /// <summary>Moves a corrupted file aside (never deletes the evidence).</summary>
     public string? QuarantineCorrupt(string path)
     {

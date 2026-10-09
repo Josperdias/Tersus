@@ -1,0 +1,69 @@
+name: Tersus - Testes, EXE e instalador (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tersus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-windows:
+    name: Testes no Windows (política, Lixeira real, links, travas)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Ambiente
+        shell: pwsh
+        run: |
+          dotnet --info
+          [System.Environment]::OSVersion | Format-List
+          "TEMP=$env:TEMP"
+          "USERPROFILE=$env:USERPROFILE"
+
+      - name: Testes automatizados (Core, auditoria estática e integração Windows)
+        shell: pwsh
+        run: dotnet run --project Tersus.Tests/Tersus.Tests.csproj -c Release -- --junit test-results/junit.xml --markdown test-results/resumo.md
+
+      - name: Resumo no painel da execução
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path test-results/resumo.md) { Get-Content test-results/resumo.md | Add-Content -Path $env:GITHUB_STEP_SUMMARY }
+
+      - name: Publicar resultados dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-testes-windows
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 30
+
+  tests-linux:
+    name: Testes portáteis no Linux (verificação cruzada)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Testes portáteis
+        run: dotnet run --project Tersus.Tests/Tersus.Tests.csproj -c Release -- --junit test-results/junit.xml --markdown test-results/resumo.md
+      - name: Resumo no painel da execução
+        if: always()
+        run: |
+          if [ -f test-results/resumo.md ]; then cat test-results/resumo.md >> "$GITHUB_STEP_SUMMARY"; fi
