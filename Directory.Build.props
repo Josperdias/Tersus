@@ -1,0 +1,20 @@
+<Project>
+  <!-- Shared build settings for every Tersus project. The version is defined ONLY here;
+       CI, the installer and the About page all read it from this single place. -->
+  <PropertyGroup>
+    <VersionPrefix>0.3.0</VersionPrefix>
+    <Product>Tersus</Product>
+    <Company>Tersus</Company>
+    <Copyright>Copyright (c) 2026 Tersus contributors. MIT License.</Copyright>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <!-- Release builds must be warning-free: a warning in a safety tool is a defect until proven otherwise. -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>

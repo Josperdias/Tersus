@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Dependency-free CLI test runner (no NuGet packages). Run with: dotnet run, project Tersus.Tests, configuration Release. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Tersus.Tests</RootNamespace>
+    <AssemblyName>Tersus.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tersus.Core\Tersus.Core.csproj" />
+  </ItemGroup>
+</Project>

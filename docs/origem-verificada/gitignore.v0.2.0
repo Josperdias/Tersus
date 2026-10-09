@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+publish/
+dist/
+.vs/
+*.user
+*.suo
+*.pfx
+*.snk
+*.key
+*.keystore

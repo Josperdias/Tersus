@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Portable core: scanning, policy, planning, duplicates, history, advice.
+       Windows-only pieces live in the Windows/ folder, are annotated with
+       [SupportedOSPlatform("windows")] and are only called after an OS check. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Tersus.Core</RootNamespace>
+    <AssemblyName>Tersus.Core</AssemblyName>
+    <Description>Tersus core library: analysis, policy and planning (no network, no telemetry).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tersus.Tests" />
+  </ItemGroup>
+</Project>

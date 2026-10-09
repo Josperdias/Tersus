@@ -1,0 +1,19 @@
+<Application x:Class="Tersus.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="PageBg" Color="#F4F7FB" />
+        <SolidColorBrush x:Key="Navy" Color="#142943" />
+        <SolidColorBrush x:Key="Azure" Color="#2265D1" />
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="15,9"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="{StaticResource Azure}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Application.Resources>
+</Application>
