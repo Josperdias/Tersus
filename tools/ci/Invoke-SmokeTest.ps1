@@ -79,6 +79,9 @@ function Get-RealDataListing { if (Test-Path -LiteralPath $realDataDir) { @(Get-
 $realDataBefore = Get-RealDataListing
 $temp = Get-LongPath ([System.IO.Path]::GetTempPath())
 $tag = [guid]::NewGuid().ToString('N').Substring(0, 8)
+# The program writes its data folder (logs, history, screenshots) into a work folder on the SAME drive as TEMP: the Recycle Bin self-test
+# refuses to run across drives (that refusal is a safety feature and is exercised by the unit tests). The result is copied to $OutDir afterwards.
+$work = Join-Path $temp "Tersus-smoke-saida-$tag"
 $sandbox = Join-Path $temp "Tersus-smoke-$tag"
 $outside = Join-Path $temp "Tersus-smoke-fora-$tag"
 New-Item -ItemType Directory -Path $sandbox, (Join-Path $sandbox 'sub'), (Join-Path $sandbox 'vazia.tmp'), $outside | Out-Null
@@ -163,8 +166,9 @@ $binBefore = Get-RecycleBinRecords ([System.IO.Path]::GetPathRoot($sandbox))
 Check 'um arquivo foi colocado na Lixeira antes da execução (para provar que ela não é esvaziada)' ($binBefore.ContainsKey($binCanary.ToLowerInvariant()))
 
 # ---- 2. run the program -----------------------------------------------------------------------------------------------------------
-$arguments = @('--smoke-test', "`"$OutDir`"", '--smoke-scan', "`"$ScanFolder`"", '--smoke-cleanup-folder', "`"$sandbox`"",
-    '--smoke-expect-eligible', "$($expectMoved.Count)", '--smoke-expect-inaccessible')
+# One extra candidate is expected at search time: the file held open by another program looks eligible until the final per-file hold, where it is skipped.
+$arguments = @('--smoke-test', "`"$work`"", '--smoke-scan', "`"$ScanFolder`"", '--smoke-cleanup-folder', "`"$sandbox`"",
+    '--smoke-expect-eligible', "$($expectMoved.Count + 1)", '--smoke-expect-inaccessible')
 if ($BigScanFolder) { $arguments += @('--smoke-big-scan', "`"$BigScanFolder`"") }
 if (-not $NoExecute) { $arguments += @('--smoke-execute', '--smoke-expect-moved', "$($expectMoved.Count)") }
 
@@ -189,6 +193,11 @@ if (-not $proc.HasExited) {
 }
 Check 'o programa não abriu conexões nem portas de rede (amostragem a cada 0,3 s)' ($netSeen.Count -eq 0) (@($netSeen) -join '; ')
 
+Start-Sleep -Milliseconds 500
+if (Test-Path -LiteralPath $work) {
+    Copy-Item -Path (Join-Path $work '*') -Destination $OutDir -Recurse -Force
+    Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+}
 $holder.Dispose()
 if ($deniedApplied) { & icacls.exe $deniedDir /remove:d $env:USERNAME | Out-Null }
 
@@ -247,6 +256,7 @@ if ($NoExecute) {
         $logText = Get-Content -LiteralPath $logs[0].FullName -Raw
         $movedLines = ([regex]::Matches($logText, 'MovedToRecycleBin')).Count
         Check 'o registro lista os arquivos movidos' ($movedLines -eq $expectMoved.Count) "$movedLines linha(s)"
+        Check 'o registro diz que o arquivo em uso foi ignorado (InUse)' ($logText -match '(?m)^Skipped\t\d+\t[^\t]*em-uso\.tmp\tInUse\t')
     }
 }
 

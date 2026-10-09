@@ -44,6 +44,7 @@ internal sealed class SmokeRunner
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private System.Threading.Timer? _watchdog;
     private int _shotNumber;
+    private int _remainingAfterClean;
 
     public SmokeRunner(App app, SmokeOptions options)
     {
@@ -199,7 +200,7 @@ internal sealed class SmokeRunner
 
         if (_o.BigScanFolder is not null)
         {
-            await Step("Árvore grande: memória, tempo e responsividade da interface", async () =>
+            await Step("Árvore grande: memória, tempo e responsividade da interface (disco frio, depois cache quente)", async () =>
             {
                 Go("home");
                 _vm.Home.SetFolder(_o.BigScanFolder);
@@ -208,6 +209,7 @@ internal sealed class SmokeRunner
                 Process self = Process.GetCurrentProcess();
                 self.Refresh();
                 long workingBefore = self.WorkingSet64;
+                long peakWorking = workingBefore;
 
                 long maxGapMs = 0;
                 long last = Environment.TickCount64;
@@ -220,31 +222,34 @@ internal sealed class SmokeRunner
                 };
                 probe.Start();
 
-                var sw = Stopwatch.StartNew();
-                Task running = _vm.Home.RunAnalysisAsync();
-                long peakWorking = workingBefore;
-                while (!running.IsCompleted)
+                CultureInfo c = CultureInfo.InvariantCulture;
+                ScanResult? scan = null;
+                for (int pass = 1; pass <= 2; pass++)
                 {
-                    await Task.Delay(200);
-                    self.Refresh();
-                    peakWorking = Math.Max(peakWorking, self.WorkingSet64);
+                    var sw = Stopwatch.StartNew();
+                    Task running = _vm.Home.RunAnalysisAsync();
+                    while (!running.IsCompleted)
+                    {
+                        await Task.Delay(200);
+                        self.Refresh();
+                        peakWorking = Math.Max(peakWorking, self.WorkingSet64);
+                    }
+
+                    await running;
+                    sw.Stop();
+                    scan = _vm.CurrentScan ?? throw new CheckFailedException("sem resultado da análise");
+                    _metrics.Add(string.Create(c, $"Passada {pass} ({(pass == 1 ? "disco frio" : "cache quente")}) em `{_o.BigScanFolder}`: {scan.FileCount:N0} arquivos, {scan.FolderCount:N0} pastas, {SizeText.Format(scan.TotalBytes, c)} lógicos, {scan.InaccessibleFolders:N0} pastas sem permissão, em {sw.Elapsed.TotalSeconds:F1} s ({scan.FileCount / Math.Max(0.001, sw.Elapsed.TotalSeconds):N0} arquivos/s)."));
+                    Check(scan.Completed, $"a passada {pass} da árvore grande não terminou");
+                    Check(scan.FileCount > 1000, "a árvore grande deveria ter mais de mil arquivos");
                 }
 
-                await running;
-                sw.Stop();
                 probe.Stop();
                 await Settle();
                 long retainedAfter = GC.GetTotalMemory(forceFullCollection: true);
                 self.Refresh();
                 peakWorking = Math.Max(peakWorking, self.PeakWorkingSet64);
-
-                ScanResult scan = _vm.CurrentScan ?? throw new CheckFailedException("sem resultado da análise");
-                CultureInfo c = CultureInfo.InvariantCulture;
-                _metrics.Add(string.Create(c, $"Análise de `{_o.BigScanFolder}`: {scan.FileCount:N0} arquivos, {scan.FolderCount:N0} pastas, {SizeText.Format(scan.TotalBytes, c)} lógicos, {scan.InaccessibleFolders:N0} pastas sem permissão, em {sw.Elapsed.TotalSeconds:F1} s."));
-                _metrics.Add(string.Create(c, $"Memória: pico do conjunto de trabalho {peakWorking / 1048576.0:F0} MB (antes: {workingBefore / 1048576.0:F0} MB); memória gerenciada retida depois da análise: {(retainedAfter - retainedBefore) / 1048576.0:F1} MB."));
-                _metrics.Add(string.Create(c, $"Interface: maior intervalo sem resposta do thread da interface durante a análise: {maxGapMs} ms."));
-                Check(scan.Completed, "a análise da árvore grande não terminou");
-                Check(scan.FileCount > 1000, "a árvore grande deveria ter mais de mil arquivos");
+                _metrics.Add(string.Create(c, $"Memória: pico do conjunto de trabalho {peakWorking / 1048576.0:F0} MB (antes: {workingBefore / 1048576.0:F0} MB); memória gerenciada retida depois das análises: {(retainedAfter - retainedBefore) / 1048576.0:F1} MB."));
+                _metrics.Add(string.Create(c, $"Interface: maior intervalo sem resposta do thread da interface durante as análises: {maxGapMs} ms."));
                 Check(peakWorking < 1_200L * 1048576, $"memória de pico alta demais: {peakWorking / 1048576} MB");
                 Check(retainedAfter - retainedBefore < 200L * 1048576, $"memória retida alta demais: {(retainedAfter - retainedBefore) / 1048576} MB");
                 Check(maxGapMs < 1500, $"a interface ficou {maxGapMs} ms sem responder durante a análise");
@@ -485,17 +490,21 @@ internal sealed class SmokeRunner
             }
 
             Check(paths.Length == report.MovedCount + report.SkippedCount + report.FailedCount, "o relatório não contabiliza todos os arquivos do plano");
+            _remainingAfterClean = paths.Length - report.MovedCount;
             Check(report.LogPath is not null && File.Exists(report.LogPath), "o registro da limpeza não foi gravado");
             await Shot("limpeza-resultado", "cleanup");
         });
 
-        await Step("Limpeza: repetir a busca depois de limpar não encontra mais nada", async () =>
+        await Step("Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado", async () =>
         {
             await _vm.Cleanup.SearchAsync();
             await Settle();
             Check(_vm.Cleanup.IsReviewing, "a nova busca não chegou à tela de revisão");
-            Check(_vm.Cleanup.Candidates.Count == 0, $"depois de limpar, a nova busca ainda acha {_vm.Cleanup.Candidates.Count} candidato(s)");
-            Check(_vm.Cleanup.SelectedCount == 0 && !_vm.Cleanup.SimulateCommand.CanExecute(null), "sem candidatos não se pode simular");
+            Check(_vm.Cleanup.Candidates.Count == _remainingAfterClean, $"depois de limpar, esperava {_remainingAfterClean} candidato(s) (só os que foram ignorados, por exemplo por estarem em uso) e a nova busca achou {_vm.Cleanup.Candidates.Count}");
+            foreach (CandidateRow row in _vm.Cleanup.Candidates)
+            {
+                Check(File.Exists(row.Candidate.Path), "um candidato listado não existe mais: " + row.Candidate.Path);
+            }
             await Shot("limpeza-repeticao", "cleanup");
         });
     }

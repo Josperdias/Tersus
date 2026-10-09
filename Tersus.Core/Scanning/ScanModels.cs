@@ -5,8 +5,11 @@ public sealed record ScanOptions
     /// <summary>How many of the largest files to keep (the UI shows them in a searchable list).</summary>
     public int LargestFilesCount { get; init; } = 300;
 
-    /// <summary>Directory-listing threads. Kept modest so a spinning disk is not thrashed and the PC stays responsive.</summary>
-    public int MaxDegreeOfParallelism { get; init; } = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
+    /// <summary>
+    /// Directory-listing threads. Listing is bound by I/O latency (a cold or network-backed disk answers one request at a time), so a few more
+    /// workers than cores keep it busy; they run at below-normal priority so the PC stays responsive, and the cap of 8 avoids thrashing a spinning disk.
+    /// </summary>
+    public int MaxDegreeOfParallelism { get; init; } = Math.Clamp(Environment.ProcessorCount, 4, 8);
 
     /// <summary>Upper bound for folder nodes kept in memory; smaller folders are folded into their parent's "other".</summary>
     public int MaxRetainedNodes { get; init; } = 100_000;
