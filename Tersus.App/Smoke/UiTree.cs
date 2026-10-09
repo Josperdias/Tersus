@@ -39,7 +39,10 @@ internal static class UiTree
                 continue;
             }
 
-            Size want = fe.DesiredSize;
+            // DesiredSize includes the element's own Margin; RenderSize does not.
+            Size want = new(
+                Math.Max(0, fe.DesiredSize.Width - fe.Margin.Left - fe.Margin.Right),
+                Math.Max(0, fe.DesiredSize.Height - fe.Margin.Top - fe.Margin.Bottom));
             Size got = fe.RenderSize;
             if (got.Width + 1 < want.Width || got.Height + 1 < want.Height)
             {

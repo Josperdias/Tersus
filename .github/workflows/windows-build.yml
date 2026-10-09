@@ -104,7 +104,7 @@ jobs:
 
       - name: Teste de fumaça do EXE publicado (interface real + Lixeira real + verificação independente)
         shell: pwsh
-        run: ./tools/ci/Invoke-SmokeTest.ps1 -Exe publish/Tersus.exe -OutDir evidencias/exe-publicado -ScanFolder $env:GITHUB_WORKSPACE
+        run: ./tools/ci/Invoke-SmokeTest.ps1 -Exe publish/Tersus.exe -OutDir evidencias/exe-publicado -ScanFolder $env:GITHUB_WORKSPACE -BigScanFolder $env:SystemRoot
 
       - name: Inno Setup 6
         id: iscc

@@ -12,7 +12,9 @@ internal sealed record SmokeOptions(
     string? CleanupFolder,
     bool Execute,
     int? ExpectEligible,
-    int? ExpectMoved)
+    int? ExpectMoved,
+    string? BigScanFolder,
+    bool ExpectInaccessible)
 {
     public static SmokeOptions? Parse(IReadOnlyList<string> args)
     {
@@ -22,6 +24,8 @@ internal sealed record SmokeOptions(
         bool execute = false;
         int? expectEligible = null;
         int? expectMoved = null;
+        string? bigScan = null;
+        bool expectInaccessible = false;
         for (int i = 0; i < args.Count; i++)
         {
             string a = args[i];
@@ -43,6 +47,12 @@ internal sealed record SmokeOptions(
                 case "--smoke-expect-eligible":
                     expectEligible = int.TryParse(Next(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int e) ? e : null;
                     break;
+                case "--smoke-big-scan":
+                    bigScan = Next();
+                    break;
+                case "--smoke-expect-inaccessible":
+                    expectInaccessible = true;
+                    break;
                 case "--smoke-expect-moved":
                     expectMoved = int.TryParse(Next(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int m) ? m : null;
                     break;
@@ -60,6 +70,8 @@ internal sealed record SmokeOptions(
             string.IsNullOrWhiteSpace(cleanup) ? null : Path.GetFullPath(cleanup),
             execute,
             expectEligible,
-            expectMoved);
+            expectMoved,
+            string.IsNullOrWhiteSpace(bigScan) ? null : Path.GetFullPath(bigScan),
+            expectInaccessible);
     }
 }

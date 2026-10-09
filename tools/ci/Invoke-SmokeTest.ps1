@@ -11,8 +11,9 @@ param(
     [Parameter(Mandatory)][string]$Exe,
     [Parameter(Mandatory)][string]$OutDir,
     [Parameter(Mandatory)][string]$ScanFolder,
+    [string]$BigScanFolder = '',
     [switch]$NoExecute,
-    [int]$TimeoutSeconds = 420
+    [int]$TimeoutSeconds = 600
 )
 
 Set-StrictMode -Version Latest
@@ -29,18 +30,40 @@ function Show-Diagnostics {
     Write-Host '----- diagnóstico: arquivos na pasta de saída do programa -----'
     Get-ChildItem -LiteralPath $OutDir -Recurse -Force -File -ErrorAction SilentlyContinue |
         ForEach-Object { Write-Host ('{0,10}  {1}' -f $_.Length, $_.FullName.Substring($OutDir.Length)) }
-    foreach ($name in @('smoke-trace.log', 'smoke-report.md')) {
-        $path = Join-Path $OutDir $name
-        if (Test-Path -LiteralPath $path) { Write-Host "----- $name -----"; Get-Content -LiteralPath $path | ForEach-Object { Write-Host $_ } }
-    }
+    $reportPath = Join-Path $OutDir 'smoke-report.md'
+    if (Test-Path -LiteralPath $reportPath) { Write-Host '----- smoke-report.md (até 120 linhas) -----'; Get-Content -LiteralPath $reportPath -TotalCount 120 | ForEach-Object { Write-Host $_ } }
+    $tracePath = Join-Path $OutDir 'smoke-trace.log'
+    if (Test-Path -LiteralPath $tracePath) { Write-Host '----- smoke-trace.log (últimas 60 linhas) -----'; Get-Content -LiteralPath $tracePath -Tail 60 | ForEach-Object { Write-Host $_ } }
     foreach ($e in @(Get-ChildItem -LiteralPath (Join-Path $OutDir 'logs') -Filter 'erro-*.log' -ErrorAction SilentlyContinue)) {
-        Write-Host "----- logs/$($e.Name) -----"; Get-Content -LiteralPath $e.FullName | ForEach-Object { Write-Host $_ }
+        Write-Host "----- logs/$($e.Name) (primeiras 40 linhas) -----"; Get-Content -LiteralPath $e.FullName -TotalCount 40 | ForEach-Object { Write-Host $_ }
     }
 }
 function Check([string]$name, [bool]$ok, [string]$detail = '') {
     $rows.Add([pscustomobject]@{ Check = $name; Result = $(if ($ok) { 'ok' } else { 'FALHOU' }); Detail = $detail })
     if (-not $ok) { $failures.Add("$name $detail") }
     Write-Host ("[{0}] {1} {2}" -f $(if ($ok) { ' ok ' } else { 'FAIL' }), $name, $detail)
+}
+
+function Get-RecycleBinRecords([string]$driveRoot) {
+    $result = @{}
+    $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $binDir = Join-Path $driveRoot ('$Recycle.Bin\' + $sid)
+    if (-not (Test-Path -LiteralPath $binDir)) { return $result }
+    foreach ($info in Get-ChildItem -LiteralPath $binDir -Force -Filter '$I*' -ErrorAction SilentlyContinue) {
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes($info.FullName)
+            $version = [BitConverter]::ToInt64($bytes, 0)
+            if ($version -eq 2) {
+                $chars = [BitConverter]::ToInt32($bytes, 24)
+                $orig = [System.Text.Encoding]::Unicode.GetString($bytes, 28, [Math]::Max(0, ($chars - 1) * 2))
+            } else {
+                $orig = [System.Text.Encoding]::Unicode.GetString($bytes, 24, [Math]::Min(520, $bytes.Length - 24)).TrimEnd([char]0)
+            }
+            $payload = Join-Path $binDir ('$R' + $info.Name.Substring(2))
+            $result[$orig.ToLowerInvariant()] = @{ Info = $info.FullName; HasPayload = (Test-Path -LiteralPath $payload) }
+        } catch { Write-Host "could not read $($info.FullName): $($_.Exception.Message)" }
+    }
+    return $result
 }
 
 # ---- 1. sandbox inside the real TEMP folder -------------------------------------------------------------------------------------
@@ -51,6 +74,9 @@ function Get-LongPath([string]$path) {
     if ($n -gt 0 -and $n -lt 2048) { return $sb.ToString() }
     return $path
 }
+$realDataDir = Join-Path $env:LOCALAPPDATA 'Tersus'
+function Get-RealDataListing { if (Test-Path -LiteralPath $realDataDir) { @(Get-ChildItem -LiteralPath $realDataDir -Recurse -Force | ForEach-Object { "$($_.FullName)|$($_.Length)|$($_.LastWriteTimeUtc.Ticks)" } | Sort-Object) } else { @() } }
+$realDataBefore = Get-RealDataListing
 $temp = Get-LongPath ([System.IO.Path]::GetTempPath())
 $tag = [guid]::NewGuid().ToString('N').Substring(0, 8)
 $sandbox = Join-Path $temp "Tersus-smoke-$tag"
@@ -70,7 +96,8 @@ $expectMoved = @(
     @{ Path = Join-Path $sandbox 'velho-2.tmp'; Bytes = 3072; Days = 20 },
     @{ Path = Join-Path $sandbox 'velho-3.temp'; Bytes = 2048; Days = 15 },
     @{ Path = Join-Path $sandbox 'sub\aninhado-1.tmp'; Bytes = 1024; Days = 40 },
-    @{ Path = Join-Path $sandbox 'sub\aninhado-2.temp'; Bytes = 1024; Days = 400 }
+    @{ Path = Join-Path $sandbox 'sub\aninhado-2.temp'; Bytes = 1024; Days = 400 },
+    @{ Path = Join-Path $sandbox ('acentua' + [char]0x00E7 + [char]0x00E3 + 'o-' + [char]0x00FC + '-' + [char]0x65E5 + [char]0x672C + [char]0x8A9E + '.tmp'); Bytes = 1500; Days = 25 }
 )
 foreach ($f in $expectMoved) { New-File $f.Path $f.Bytes $f.Days $f.Days }
 
@@ -84,6 +111,7 @@ $p = Join-Path $sandbox 'criado-recente.tmp'; New-File $p 500 0 30; Add-Decoy $p
 $p = Join-Path $sandbox 'quase-14-dias.tmp'; New-File $p 500 13 13; Add-Decoy $p
 $p = Join-Path $sandbox 'documento.txt'; New-File $p 500 60 60; Add-Decoy $p
 $p = Join-Path $sandbox 'foto.jpg'; New-File $p 500 60 60; Add-Decoy $p
+$p = Join-Path $sandbox 'relatorio-antigo.docx'; New-File $p 4096 1095 1095; Add-Decoy $p
 $p = Join-Path $sandbox 'velho.tmp.exe'; New-File $p 500 60 60; Add-Decoy $p
 $p = Join-Path $sandbox 'sem-extensao'; New-File $p 500 60 60; Add-Decoy $p
 $p = Join-Path $sandbox 'grande.tmp'; New-File $p (257MB) 60 60; Add-Decoy $p
@@ -108,6 +136,13 @@ $linksCreated = @()
 try { New-Item -ItemType Junction -Path $junction -Target $outside | Out-Null; $linksCreated += $junction } catch { Write-Host "junction not created: $($_.Exception.Message)" }
 try { New-Item -ItemType SymbolicLink -Path $symlink -Target $outsideFiles[0] | Out-Null; $linksCreated += $symlink } catch { Write-Host "symlink not created: $($_.Exception.Message)" }
 
+# A folder the current user is not allowed to read, with an old .tmp inside: it must be counted as inaccessible and left alone.
+$deniedDir = Join-Path $sandbox 'sem-permissao'
+New-Item -ItemType Directory -Path $deniedDir | Out-Null
+$deniedFile = Join-Path $deniedDir 'velho-negado.tmp'; New-File $deniedFile 800 60 60
+Add-Decoy $deniedFile
+$deniedApplied = $false
+
 # Record "before" state of every decoy to prove they are bit-for-bit unchanged afterwards.
 $before = @{}
 foreach ($d in ($decoys + $outsideFiles)) {
@@ -115,25 +150,47 @@ foreach ($d in ($decoys + $outsideFiles)) {
     $before[$d] = @{ Length = $i.Length; Write = $i.LastWriteTimeUtc.Ticks; Create = $i.CreationTimeUtc.Ticks; Attr = [int]$i.Attributes }
 }
 $emptyDirTmp = Join-Path $sandbox 'vazia.tmp'
+& icacls.exe $deniedDir /deny "$($env:USERNAME):(OI)(CI)(RX)" | Out-Null
+$deniedApplied = ($LASTEXITCODE -eq 0)
+Check 'a pasta sem permissão foi preparada (ACL de negação aplicada)' $deniedApplied
+
+# A file already in the Recycle Bin BEFORE the run: the program must never touch or empty the bin.
+Add-Type -AssemblyName Microsoft.VisualBasic
+$binCanary = Join-Path $temp "Tersus-lixeira-previa-$tag.txt"
+[System.IO.File]::WriteAllText($binCanary, 'ja estava na Lixeira')
+[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($binCanary, [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin)
+$binBefore = Get-RecycleBinRecords ([System.IO.Path]::GetPathRoot($sandbox))
+Check 'um arquivo foi colocado na Lixeira antes da execução (para provar que ela não é esvaziada)' ($binBefore.ContainsKey($binCanary.ToLowerInvariant()))
 
 # ---- 2. run the program -----------------------------------------------------------------------------------------------------------
 $arguments = @('--smoke-test', "`"$OutDir`"", '--smoke-scan', "`"$ScanFolder`"", '--smoke-cleanup-folder', "`"$sandbox`"",
-    '--smoke-expect-eligible', "$($expectMoved.Count)")
+    '--smoke-expect-eligible', "$($expectMoved.Count)", '--smoke-expect-inaccessible')
+if ($BigScanFolder) { $arguments += @('--smoke-big-scan', "`"$BigScanFolder`"") }
 if (-not $NoExecute) { $arguments += @('--smoke-execute', '--smoke-expect-moved', "$($expectMoved.Count)") }
 
 Write-Host "Starting: $Exe $($arguments -join ' ')"
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 $proc = Start-Process -FilePath $Exe -ArgumentList $arguments -PassThru -WindowStyle Normal
-$finished = $proc.WaitForExit($TimeoutSeconds * 1000)
-if (-not $finished) {
+$netSeen = New-Object System.Collections.Generic.HashSet[string]
+$deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+while (-not $proc.HasExited -and (Get-Date) -lt $deadline) {
+    try {
+        foreach ($c in @(Get-NetTCPConnection -OwningProcess $proc.Id -ErrorAction SilentlyContinue)) { [void]$netSeen.Add("TCP $($c.LocalAddress):$($c.LocalPort) -> $($c.RemoteAddress):$($c.RemotePort) $($c.State)") }
+        foreach ($u in @(Get-NetUDPEndpoint -OwningProcess $proc.Id -ErrorAction SilentlyContinue)) { [void]$netSeen.Add("UDP $($u.LocalAddress):$($u.LocalPort)") }
+    } catch { }
+    Start-Sleep -Milliseconds 300
+}
+if (-not $proc.HasExited) {
     try { $proc.Kill($true) } catch { }
     Check 'o programa terminou dentro do tempo limite' $false "$TimeoutSeconds s"
 } else {
     $proc.WaitForExit()
     Check 'código de saída do teste de fumaça é 0' ($proc.ExitCode -eq 0) "exit=$($proc.ExitCode) em $([int]$sw.Elapsed.TotalSeconds) s"
 }
+Check 'o programa não abriu conexões nem portas de rede (amostragem a cada 0,3 s)' ($netSeen.Count -eq 0) (@($netSeen) -join '; ')
 
 $holder.Dispose()
+if ($deniedApplied) { & icacls.exe $deniedDir /remove:d $env:USERNAME | Out-Null }
 
 # ---- 3. independent verification --------------------------------------------------------------------------------------------------
 $report = Join-Path $OutDir 'smoke-report.md'
@@ -170,26 +227,8 @@ if ($NoExecute) {
     foreach ($f in $expectMoved) { Check "saiu da pasta: $([System.IO.Path]::GetFileName($f.Path))" (-not (Test-Path -LiteralPath $f.Path)) }
 
     # Independent proof that they are in the Recycle Bin: read the $I records Windows wrote for this user on the sandbox's drive.
-    $root = [System.IO.Path]::GetPathRoot($sandbox)
-    $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-    $binDir = Join-Path $root ('$Recycle.Bin\' + $sid)
-    $originals = @{}
-    if (Test-Path -LiteralPath $binDir) {
-        foreach ($info in Get-ChildItem -LiteralPath $binDir -Force -Filter '$I*' -ErrorAction SilentlyContinue) {
-            try {
-                $bytes = [System.IO.File]::ReadAllBytes($info.FullName)
-                $version = [BitConverter]::ToInt64($bytes, 0)
-                if ($version -eq 2) {
-                    $chars = [BitConverter]::ToInt32($bytes, 24)
-                    $orig = [System.Text.Encoding]::Unicode.GetString($bytes, 28, [Math]::Max(0, ($chars - 1) * 2))
-                } else {
-                    $orig = [System.Text.Encoding]::Unicode.GetString($bytes, 24, [Math]::Min(520, $bytes.Length - 24)).TrimEnd([char]0)
-                }
-                $payload = Join-Path $binDir ('$R' + $info.Name.Substring(2))
-                $originals[$orig.ToLowerInvariant()] = @{ Info = $info.FullName; HasPayload = (Test-Path -LiteralPath $payload) }
-            } catch { Write-Host "could not read $($info.FullName): $($_.Exception.Message)" }
-        }
-    }
+    $originals = Get-RecycleBinRecords ([System.IO.Path]::GetPathRoot($sandbox))
+    $binDir = 'Lixeira do usuário'
     Check 'a Lixeira do usuário pôde ser lida para a verificação independente' ($originals.Count -gt 0) "$($originals.Count) registro(s) em $binDir"
     foreach ($f in $expectMoved) {
         $key = $f.Path.ToLowerInvariant()
@@ -198,6 +237,9 @@ if ($NoExecute) {
     foreach ($d in $decoys) {
         Check ('isca NÃO está na Lixeira: ' + [System.IO.Path]::GetFileName($d)) (-not $originals.ContainsKey($d.ToLowerInvariant()))
     }
+    Check 'a Lixeira NÃO foi esvaziada: o item que já estava lá continua' ($originals.ContainsKey($binCanary.ToLowerInvariant()) -and $originals[$binCanary.ToLowerInvariant()].HasPayload)
+    $stillThere = @($binBefore.Keys | Where-Object { $originals.ContainsKey($_) }).Count
+    Check 'todos os itens que estavam na Lixeira antes continuam nela' ($stillThere -eq $binBefore.Count) "$stillThere de $($binBefore.Count)"
 
     $logs = @(Get-ChildItem -LiteralPath (Join-Path $OutDir 'logs') -Filter 'limpeza-*.log' -ErrorAction SilentlyContinue)
     Check 'o registro da limpeza foi gravado' ($logs.Count -ge 1)
@@ -207,6 +249,9 @@ if ($NoExecute) {
         Check 'o registro lista os arquivos movidos' ($movedLines -eq $expectMoved.Count) "$movedLines linha(s)"
     }
 }
+
+$realDataAfter = Get-RealDataListing
+Check 'o modo de teste não tocou na pasta de dados real (%LOCALAPPDATA%\Tersus)' (@(Compare-Object -ReferenceObject @($realDataBefore) -DifferenceObject @($realDataAfter)).Count -eq 0)
 
 # ---- 4. clean up the sandbox (links first, never following them) -----------------------------------------------------------------
 foreach ($l in $linksCreated) {

@@ -11,7 +11,9 @@ using Tersus.App.Controls;
 using Tersus.App.Services;
 using Tersus.App.ViewModels;
 using Tersus.App.Views;
+using Tersus.Core;
 using Tersus.Core.Cleanup;
+using Tersus.Core.Scanning;
 using Tersus.Core.Storage;
 
 namespace Tersus.App.Smoke;
@@ -38,6 +40,7 @@ internal sealed class SmokeRunner
     private readonly List<StepResult> _steps = [];
     private readonly List<string> _layoutWarnings = [];
     private readonly List<string> _shots = [];
+    private readonly List<string> _metrics = [];
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private System.Threading.Timer? _watchdog;
     private int _shotNumber;
@@ -138,13 +141,17 @@ internal sealed class SmokeRunner
             await Shot("aplicativos", "apps");
         });
 
-        await Step("Histórico", async () =>
+        await Step("Histórico (duas análises e comparação)", async () =>
         {
+            _vm.Home.SetFolder(_o.ScanFolder);
+            await _vm.Home.RunAnalysisAsync();
             Go("history");
             _vm.History.Reload();
             await Settle();
             ExpectView<HistoryView>();
             Check(_vm.History.HasData, "a análise concluída não gerou um resumo no histórico");
+            Check(_vm.History.Rows.Count >= 2, $"esperava 2 ou mais resumos do mesmo local, há {_vm.History.Rows.Count}");
+            Check(_vm.History.ComparisonHeadline.Length > 0, "a comparação com a análise anterior está vazia");
             await Shot("historico", "history");
         });
 
@@ -165,6 +172,85 @@ internal sealed class SmokeRunner
             Check(_vm.About.NeverList.Count >= 8, "a lista do que o Tersus nunca limpa está incompleta");
             await Shot("seguranca", "about");
         });
+
+        await Step("Cancelamento da análise (responde em poucos segundos e não vai ao histórico)", async () =>
+        {
+            int snapshotsBefore = _services.History.Load().Count;
+            string systemRoot = Path.GetPathRoot(Environment.SystemDirectory) ?? throw new CheckFailedException("sem unidade do sistema");
+            Go("home");
+            _vm.Home.SetFolder(systemRoot);
+            await Settle();
+            Task running = _vm.Home.RunAnalysisAsync();
+            await Task.Delay(1500);
+            Check(_vm.Home.IsBusy, "a análise da unidade inteira deveria estar em andamento");
+            await Shot("analise-em-andamento", "home");
+            var sw = Stopwatch.StartNew();
+            _vm.Home.CancelCommand.Execute(null);
+            await running;
+            sw.Stop();
+            _metrics.Add(string.Create(CultureInfo.InvariantCulture, $"Cancelar a análise de {systemRoot} levou {sw.Elapsed.TotalSeconds:F2} s até a tela voltar ao normal."));
+            Check(sw.Elapsed < TimeSpan.FromSeconds(8), $"cancelar demorou {sw.Elapsed.TotalSeconds:F1} s");
+            Check(!_vm.Home.IsBusy, "depois de cancelar a tela deve voltar ao estado ocioso");
+            Check(_vm.CurrentScan is { Completed: false }, "a análise cancelada deve ser marcada como PARCIAL");
+            Check(_services.History.Load().Count == snapshotsBefore, "uma análise cancelada não pode entrar no histórico");
+            await Settle();
+            await Shot("analise-cancelada", "home");
+        });
+
+        if (_o.BigScanFolder is not null)
+        {
+            await Step("Árvore grande: memória, tempo e responsividade da interface", async () =>
+            {
+                Go("home");
+                _vm.Home.SetFolder(_o.BigScanFolder);
+                await Settle();
+                long retainedBefore = GC.GetTotalMemory(forceFullCollection: true);
+                Process self = Process.GetCurrentProcess();
+                self.Refresh();
+                long workingBefore = self.WorkingSet64;
+
+                long maxGapMs = 0;
+                long last = Environment.TickCount64;
+                var probe = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(50) };
+                probe.Tick += (_, _) =>
+                {
+                    long now = Environment.TickCount64;
+                    maxGapMs = Math.Max(maxGapMs, now - last);
+                    last = now;
+                };
+                probe.Start();
+
+                var sw = Stopwatch.StartNew();
+                Task running = _vm.Home.RunAnalysisAsync();
+                long peakWorking = workingBefore;
+                while (!running.IsCompleted)
+                {
+                    await Task.Delay(200);
+                    self.Refresh();
+                    peakWorking = Math.Max(peakWorking, self.WorkingSet64);
+                }
+
+                await running;
+                sw.Stop();
+                probe.Stop();
+                await Settle();
+                long retainedAfter = GC.GetTotalMemory(forceFullCollection: true);
+                self.Refresh();
+                peakWorking = Math.Max(peakWorking, self.PeakWorkingSet64);
+
+                ScanResult scan = _vm.CurrentScan ?? throw new CheckFailedException("sem resultado da análise");
+                CultureInfo c = CultureInfo.InvariantCulture;
+                _metrics.Add(string.Create(c, $"Análise de `{_o.BigScanFolder}`: {scan.FileCount:N0} arquivos, {scan.FolderCount:N0} pastas, {SizeText.Format(scan.TotalBytes, c)} lógicos, {scan.InaccessibleFolders:N0} pastas sem permissão, em {sw.Elapsed.TotalSeconds:F1} s."));
+                _metrics.Add(string.Create(c, $"Memória: pico do conjunto de trabalho {peakWorking / 1048576.0:F0} MB (antes: {workingBefore / 1048576.0:F0} MB); memória gerenciada retida depois da análise: {(retainedAfter - retainedBefore) / 1048576.0:F1} MB."));
+                _metrics.Add(string.Create(c, $"Interface: maior intervalo sem resposta do thread da interface durante a análise: {maxGapMs} ms."));
+                Check(scan.Completed, "a análise da árvore grande não terminou");
+                Check(scan.FileCount > 1000, "a árvore grande deveria ter mais de mil arquivos");
+                Check(peakWorking < 1_200L * 1048576, $"memória de pico alta demais: {peakWorking / 1048576} MB");
+                Check(retainedAfter - retainedBefore < 200L * 1048576, $"memória retida alta demais: {(retainedAfter - retainedBefore) / 1048576} MB");
+                Check(maxGapMs < 1500, $"a interface ficou {maxGapMs} ms sem responder durante a análise");
+                await Shot("arvore-grande", "home");
+            });
+        }
 
         await Step("Zoom da interface (140%)", async () =>
         {
@@ -272,6 +358,11 @@ internal sealed class SmokeRunner
             }
 
             Check(_vm.Cleanup.SelectedCount == _vm.Cleanup.Candidates.Count, "a limpeza rápida deveria marcar todos os elegíveis");
+            if (_o.ExpectInaccessible)
+            {
+                Check(_vm.Cleanup.SearchSummary.Contains("sem permissão", StringComparison.Ordinal), "a pasta sem permissão deveria ter sido contada e ignorada: " + _vm.Cleanup.SearchSummary);
+            }
+
             foreach (CandidateRow row in _vm.Cleanup.Candidates)
             {
                 Check(PathStartsWith(row.Candidate.Path, _o.CleanupFolder), "candidato fora da pasta de teste: " + row.Candidate.Path);
@@ -396,6 +487,16 @@ internal sealed class SmokeRunner
             Check(paths.Length == report.MovedCount + report.SkippedCount + report.FailedCount, "o relatório não contabiliza todos os arquivos do plano");
             Check(report.LogPath is not null && File.Exists(report.LogPath), "o registro da limpeza não foi gravado");
             await Shot("limpeza-resultado", "cleanup");
+        });
+
+        await Step("Limpeza: repetir a busca depois de limpar não encontra mais nada", async () =>
+        {
+            await _vm.Cleanup.SearchAsync();
+            await Settle();
+            Check(_vm.Cleanup.IsReviewing, "a nova busca não chegou à tela de revisão");
+            Check(_vm.Cleanup.Candidates.Count == 0, $"depois de limpar, a nova busca ainda acha {_vm.Cleanup.Candidates.Count} candidato(s)");
+            Check(_vm.Cleanup.SelectedCount == 0 && !_vm.Cleanup.SimulateCommand.CanExecute(null), "sem candidatos não se pode simular");
+            await Shot("limpeza-repeticao", "cleanup");
         });
     }
 
@@ -522,10 +623,15 @@ internal sealed class SmokeRunner
 
         sb.AppendLine();
         sb.AppendLine(CultureInfo.InvariantCulture, $"## Exceções não tratadas na interface: {App.SmokeUnhandled.Count}");
-        foreach (string u in App.SmokeUnhandled.Take(10))
+        foreach (IGrouping<string, string> group in App.SmokeUnhandled.GroupBy(u => u.Split('\n')[0].Trim()).Take(8))
         {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- {group.Count()}x: {group.Key}");
             sb.AppendLine("```");
-            sb.AppendLine(u);
+            foreach (string line in group.First().Split('\n').Skip(1).Take(14))
+            {
+                sb.AppendLine(line.TrimEnd());
+            }
+
             sb.AppendLine("```");
         }
 
@@ -534,6 +640,13 @@ internal sealed class SmokeRunner
         foreach (string w in _layoutWarnings.Distinct().Take(80))
         {
             sb.AppendLine($"- {w}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("## Medições");
+        foreach (string m in _metrics)
+        {
+            sb.AppendLine($"- {m}");
         }
 
         sb.AppendLine();

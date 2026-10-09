@@ -22,7 +22,7 @@
     <SolidColorBrush x:Key="RiskLow" Color="#2E7D32" />
     <SolidColorBrush x:Key="RiskInfo" Color="#44546A" />
     <SolidColorBrush x:Key="Accent" Color="#0F7B5F" />
-    <SolidColorBrush x:Key="WarnButton" Color="#9A4A06" />
+    <SolidColorBrush x:Key="WarnButtonBg" Color="#9A4A06" />
     <SolidColorBrush x:Key="WarnButtonHover" Color="#7C3B05" />
     <SolidColorBrush x:Key="NavBg" Color="#142943" />
     <SolidColorBrush x:Key="NavHover" Color="#1E3A5F" />

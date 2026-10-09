@@ -106,6 +106,27 @@ if (Test-Path -LiteralPath $installedExe) {
     Check 'o programa INSTALADO passou no teste de fumaça e na verificação independente' ($LASTEXITCODE -eq 0) "exit=$LASTEXITCODE"
 }
 
+# ---- normal start of the INSTALLED program (not the test mode) ------------------------------------------------------------------------------
+if (Test-Path -LiteralPath $installedExe) {
+    $app = Start-Process -FilePath $installedExe -PassThru
+    $startDeadline = (Get-Date).AddSeconds(60)
+    $title = ''
+    while ((Get-Date) -lt $startDeadline -and -not $app.HasExited) {
+        $app.Refresh()
+        if ($app.MainWindowHandle -ne [IntPtr]::Zero) { $title = $app.MainWindowTitle; break }
+        Start-Sleep -Milliseconds 300
+    }
+    Check 'o programa instalado abre normalmente (janela principal "Tersus")' ((-not $app.HasExited) -and $title -eq 'Tersus') "título='$title'"
+    Start-Sleep -Seconds 2
+    Check 'o uso normal criou a pasta de dados e a de registros do Tersus' (Test-Path -LiteralPath (Join-Path $dataDir 'logs'))
+    if (-not $app.HasExited) {
+        [void]$app.CloseMainWindow()
+        $closed = $app.WaitForExit(20000)
+        if (-not $closed) { try { $app.Kill() } catch { } }
+        Check 'o programa fecha normalmente pela janela (código 0)' ($closed -and $app.ExitCode -eq 0) "exit=$($app.ExitCode)"
+    }
+}
+
 # ---- uninstall --------------------------------------------------------------------------------------------------------------------------------
 $unins = Join-Path $installDir 'unins000.exe'
 if (Test-Path -LiteralPath $unins) {
@@ -120,13 +141,12 @@ Check 'Tersus.exe foi removido' (-not (Test-Path -LiteralPath $installedExe))
 Check 'a pasta do programa foi removida' (-not (Test-Path -LiteralPath $installDir)) $installDir
 Check 'o atalho do Menu Iniciar foi removido' (-not (Test-Path -LiteralPath $startMenu))
 Check 'o registro de desinstalação foi removido' (-not (Test-Path -LiteralPath $uninstallHkcu -ErrorAction SilentlyContinue))
-Check 'os dados do usuário (%LOCALAPPDATA%\Tersus) continuam intactos' ((Test-Path -LiteralPath $marker) -and ((Get-Content -LiteralPath $marker -Raw) -like 'dados do usuario*'))
+Check 'os dados do usuário (%LOCALAPPDATA%\Tersus) continuam intactos depois de desinstalar' ((Test-Path -LiteralPath $marker) -and ((Get-Content -LiteralPath $marker -Raw) -like 'dados do usuario*') -and (Test-Path -LiteralPath (Join-Path $dataDir 'logs')))
 
 $final = Get-SystemSnapshot
 Check 'depois da desinstalação o sistema voltou ao estado inicial (Run/serviços/tarefas/Inicializar)' ((Same $before.Run $final.Run) -and (Same $before.Services $final.Services) -and (Same $before.Tasks $final.Tasks) -and (Same $before.Startup $final.Startup))
 
-Remove-Item -LiteralPath $marker -Force -ErrorAction SilentlyContinue
-try { if ((Get-ChildItem -LiteralPath $dataDir -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $dataDir -Force } } catch { }
+Remove-Item -LiteralPath $dataDir -Recurse -Force -ErrorAction SilentlyContinue
 
 # ---- summary ------------------------------------------------------------------------------------------------------------------------------------
 $md = New-Object System.Text.StringBuilder
