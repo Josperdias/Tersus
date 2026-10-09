@@ -1,0 +1,715 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using Tersus.App.Controls;
+using Tersus.App.Services;
+using Tersus.App.ViewModels;
+using Tersus.App.Views;
+using Tersus.Core;
+using Tersus.Core.Cleanup;
+using Tersus.Core.Scanning;
+using Tersus.Core.Storage;
+
+namespace Tersus.App.Smoke;
+
+/// <summary>
+/// Automated check of the PUBLISHED program, run by the build pipeline on a clean Windows machine: opens the real window with the real
+/// services, visits every page, analyses a folder, runs the cleanup flow against a sandbox folder prepared by the pipeline, checks the
+/// safety properties of the confirmation window, takes screenshots and fails on any data-binding error, unhandled exception or failed
+/// expectation. It uses the data folder it is given, never the real one, and it cannot confirm a cleanup outside its sandbox.
+/// </summary>
+internal sealed class SmokeRunner
+{
+    private sealed record StepResult(string Name, bool Passed, TimeSpan Elapsed, string? Detail);
+
+    private sealed class CheckFailedException(string message) : Exception(message);
+
+    private readonly SmokeOptions _o;
+    private readonly App _app;
+    private readonly SmokeDialogService _dialogs;
+    private readonly AppServices _services;
+    private readonly MainViewModel _vm;
+    private readonly MainWindow _window;
+    private readonly BindingErrorListener _bindingErrors = new();
+    private readonly List<StepResult> _steps = [];
+    private readonly List<string> _layoutWarnings = [];
+    private readonly List<string> _shots = [];
+    private readonly List<string> _metrics = [];
+    private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private System.Threading.Timer? _watchdog;
+    private int _shotNumber;
+    private int _remainingAfterClean;
+
+    public SmokeRunner(App app, SmokeOptions options)
+    {
+        _app = app;
+        _o = options;
+        System.Diagnostics.PresentationTraceSources.Refresh();
+        System.Diagnostics.PresentationTraceSources.DataBindingSource.Listeners.Add(_bindingErrors);
+        System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning;
+
+        _dialogs = new SmokeDialogService(options.CleanupFolder);
+        _services = AppServices.Create(_dialogs, new AppPaths(options.OutDir));
+        _vm = new MainViewModel(_services);
+        _window = new MainWindow(_vm) { ShowActivated = false };
+    }
+
+    private async Task RunAsyncCore()
+    {
+        _window.Show();
+        await Settle(300);
+
+        await Step("Início: janela e unidades", async () =>
+        {
+            Check(_window.IsVisible, "a janela principal não abriu");
+            Check(_vm.Home.Drives.Count > 0, "nenhuma unidade foi listada");
+            ExpectView<HomeView>();
+            await Shot("inicio", "home");
+        });
+
+        await Step("Análise de armazenamento", async () =>
+        {
+            _vm.Home.SetFolder(_o.ScanFolder);
+            await _vm.Home.RunAnalysisAsync();
+            Check(_vm.CurrentScan is { Completed: true, FileCount: > 0 }, "a análise não terminou com arquivos encontrados em " + _o.ScanFolder);
+            await Settle();
+            await Shot("inicio-analisado", "home");
+        });
+
+        await Step("Visão geral e mapa de blocos", async () =>
+        {
+            Go("overview");
+            await Settle();
+            ExpectView<OverviewView>();
+            Check(_vm.Overview.Rows.Count > 0, "a visão geral não tem linhas");
+            TreemapControl? map = UiTree.Of<TreemapControl>(_window.Host).FirstOrDefault();
+            Check(map is { BlockCount: > 0 }, "o mapa de blocos está vazio");
+            Check(_vm.Overview.Explanation is not null, "a explicação da pasta selecionada está vazia");
+            await Shot("visao-geral", "overview");
+
+            FolderRow? drill = _vm.Overview.Rows.FirstOrDefault(r => r.CanOpen);
+            if (drill is not null)
+            {
+                int before = _vm.Overview.Breadcrumbs.Count;
+                _vm.Overview.OpenCommand.Execute(drill);
+                await Settle();
+                Check(_vm.Overview.Breadcrumbs.Count == before + 1, "abrir uma pasta não aprofundou o caminho");
+                await Shot("visao-geral-subpasta", "overview");
+                _vm.Overview.UpCommand.Execute(null);
+                await Settle();
+                Check(_vm.Overview.Breadcrumbs.Count == before, "subir um nível não voltou ao caminho anterior");
+            }
+        });
+
+        await Step("Maiores arquivos", async () =>
+        {
+            Go("files");
+            await Settle();
+            ExpectView<LargeFilesView>();
+            Check(_vm.LargeFiles.View.Cast<object>().Any(), "a lista de maiores arquivos está vazia");
+            _vm.LargeFiles.Selected = _vm.LargeFiles.View.Cast<FileRow>().First();
+            await Settle();
+            Check(_vm.LargeFiles.Explanation is not null, "o arquivo selecionado não foi explicado");
+            await Shot("maiores-arquivos", "files");
+        });
+
+        await Step("Duplicados (somente relatório)", async () =>
+        {
+            Go("duplicates");
+            await Settle();
+            ExpectView<DuplicatesView>();
+            _vm.Duplicates.Folder = _o.ScanFolder;
+            _vm.Duplicates.MinIndex = 0;
+            await _vm.Duplicates.RunAsync();
+            await Settle();
+            await Shot("duplicados", "duplicates");
+        });
+
+        await CleanupSteps();
+
+        await Step("Aplicativos instalados (leitura)", async () =>
+        {
+            Go("apps");
+            await _vm.Apps.LoadAsync();
+            await Settle();
+            ExpectView<AppsView>();
+            await Shot("aplicativos", "apps");
+        });
+
+        await Step("Histórico (duas análises e comparação)", async () =>
+        {
+            _vm.Home.SetFolder(_o.ScanFolder);
+            await _vm.Home.RunAnalysisAsync();
+            Go("history");
+            _vm.History.Reload();
+            await Settle();
+            ExpectView<HistoryView>();
+            Check(_vm.History.HasData, "a análise concluída não gerou um resumo no histórico");
+            Check(_vm.History.Rows.Count >= 2, $"esperava 2 ou mais resumos do mesmo local, há {_vm.History.Rows.Count}");
+            Check(_vm.History.ComparisonHeadline.Length > 0, "a comparação com a análise anterior está vazia");
+            await Shot("historico", "history");
+        });
+
+        await Step("Recomendações (somente leitura)", async () =>
+        {
+            Go("advice");
+            await _vm.Advisor.LoadAsync();
+            await Settle();
+            ExpectView<AdvisorView>();
+            await Shot("recomendacoes", "advice");
+        });
+
+        await Step("Segurança e sobre", async () =>
+        {
+            Go("about");
+            await Settle();
+            ExpectView<AboutView>();
+            Check(_vm.About.NeverList.Count >= 8, "a lista do que o Tersus nunca limpa está incompleta");
+            await Shot("seguranca", "about");
+        });
+
+        await Step("Cancelamento da análise (responde em poucos segundos e não vai ao histórico)", async () =>
+        {
+            int snapshotsBefore = _services.History.Load().Count;
+            string systemRoot = Path.GetPathRoot(Environment.SystemDirectory) ?? throw new CheckFailedException("sem unidade do sistema");
+            Go("home");
+            _vm.Home.SetFolder(systemRoot);
+            await Settle();
+            Task running = _vm.Home.RunAnalysisAsync();
+            await Task.Delay(1500);
+            Check(_vm.Home.IsBusy, "a análise da unidade inteira deveria estar em andamento");
+            await Shot("analise-em-andamento", "home");
+            var sw = Stopwatch.StartNew();
+            _vm.Home.CancelCommand.Execute(null);
+            await running;
+            sw.Stop();
+            _metrics.Add(string.Create(CultureInfo.InvariantCulture, $"Cancelar a análise de {systemRoot} levou {sw.Elapsed.TotalSeconds:F2} s até a tela voltar ao normal."));
+            Check(sw.Elapsed < TimeSpan.FromSeconds(8), $"cancelar demorou {sw.Elapsed.TotalSeconds:F1} s");
+            Check(!_vm.Home.IsBusy, "depois de cancelar a tela deve voltar ao estado ocioso");
+            Check(_vm.CurrentScan is { Completed: false }, "a análise cancelada deve ser marcada como PARCIAL");
+            Check(_services.History.Load().Count == snapshotsBefore, "uma análise cancelada não pode entrar no histórico");
+            await Settle();
+            await Shot("analise-cancelada", "home");
+        });
+
+        if (_o.BigScanFolder is not null)
+        {
+            await Step("Árvore grande: memória, tempo e responsividade da interface (disco frio, depois cache quente)", async () =>
+            {
+                Go("home");
+                _vm.Home.SetFolder(_o.BigScanFolder);
+                await Settle();
+                long retainedBefore = GC.GetTotalMemory(forceFullCollection: true);
+                Process self = Process.GetCurrentProcess();
+                self.Refresh();
+                long workingBefore = self.WorkingSet64;
+                long peakWorking = workingBefore;
+
+                long maxGapMs = 0;
+                long last = Environment.TickCount64;
+                var probe = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(50) };
+                probe.Tick += (_, _) =>
+                {
+                    long now = Environment.TickCount64;
+                    maxGapMs = Math.Max(maxGapMs, now - last);
+                    last = now;
+                };
+                probe.Start();
+
+                CultureInfo c = CultureInfo.InvariantCulture;
+                ScanResult? scan = null;
+                for (int pass = 1; pass <= 2; pass++)
+                {
+                    var sw = Stopwatch.StartNew();
+                    Task running = _vm.Home.RunAnalysisAsync();
+                    while (!running.IsCompleted)
+                    {
+                        await Task.Delay(200);
+                        self.Refresh();
+                        peakWorking = Math.Max(peakWorking, self.WorkingSet64);
+                    }
+
+                    await running;
+                    sw.Stop();
+                    scan = _vm.CurrentScan ?? throw new CheckFailedException("sem resultado da análise");
+                    _metrics.Add(string.Create(c, $"Passada {pass} ({(pass == 1 ? "disco frio" : "cache quente")}) em `{_o.BigScanFolder}`: {scan.FileCount:N0} arquivos, {scan.FolderCount:N0} pastas, {SizeText.Format(scan.TotalBytes, c)} lógicos, {scan.InaccessibleFolders:N0} pastas sem permissão, em {sw.Elapsed.TotalSeconds:F1} s ({scan.FileCount / Math.Max(0.001, sw.Elapsed.TotalSeconds):N0} arquivos/s)."));
+                    Check(scan.Completed, $"a passada {pass} da árvore grande não terminou");
+                    Check(scan.FileCount > 1000, "a árvore grande deveria ter mais de mil arquivos");
+                }
+
+                probe.Stop();
+                await Settle();
+                long retainedAfter = GC.GetTotalMemory(forceFullCollection: true);
+                self.Refresh();
+                peakWorking = Math.Max(peakWorking, self.PeakWorkingSet64);
+                _metrics.Add(string.Create(c, $"Memória: pico do conjunto de trabalho {peakWorking / 1048576.0:F0} MB (antes: {workingBefore / 1048576.0:F0} MB); memória gerenciada retida depois das análises: {(retainedAfter - retainedBefore) / 1048576.0:F1} MB."));
+                _metrics.Add(string.Create(c, $"Interface: maior intervalo sem resposta do thread da interface durante as análises: {maxGapMs} ms."));
+                Check(peakWorking < 1_200L * 1048576, $"memória de pico alta demais: {peakWorking / 1048576} MB");
+                Check(retainedAfter - retainedBefore < 200L * 1048576, $"memória retida alta demais: {(retainedAfter - retainedBefore) / 1048576} MB");
+                Check(maxGapMs < 1500, $"a interface ficou {maxGapMs} ms sem responder durante a análise");
+                await Shot("arvore-grande", "home");
+            });
+        }
+
+        await Step("Zoom da interface (140%)", async () =>
+        {
+            _vm.UiScale = 1.4;
+            Go("overview");
+            await Settle();
+            await Shot("zoom-visao-geral", "zoom");
+            Go("cleanup");
+            await Settle();
+            await Shot("zoom-limpeza", "zoom");
+            _vm.UiScale = 1.0;
+        });
+
+        await Step("Paleta de alto contraste (troca e volta)", async () =>
+        {
+            _app.UseContrastPalette(true);
+            Go("home");
+            await Settle();
+            await Shot("alto-contraste-inicio", "hc");
+            Go("cleanup");
+            await Settle();
+            await Shot("alto-contraste-limpeza", "hc");
+            _app.UseContrastPalette(false);
+            Go("home");
+            await Settle();
+        });
+    }
+
+    public async Task<int> RunAsync()
+    {
+        _watchdog = new System.Threading.Timer(_ =>
+        {
+            try
+            {
+                _steps.Add(new StepResult("Tempo limite do teste de fumaça", false, _clock.Elapsed, "o teste passou de 6 minutos e foi interrompido"));
+                WriteReport();
+            }
+            finally
+            {
+                Environment.Exit(3);
+            }
+        }, null, TimeSpan.FromMinutes(6), Timeout.InfiniteTimeSpan);
+
+        try
+        {
+            await RunAsyncCore();
+        }
+        catch (Exception ex)
+        {
+            _steps.Add(new StepResult("Falha geral do teste de fumaça", false, _clock.Elapsed, ex.ToString()));
+        }
+
+        try
+        {
+            await Settle();
+        }
+        catch (Exception ex)
+        {
+            Trace("Settle final falhou: " + ex);
+        }
+
+        bool ok;
+        try
+        {
+            ok = WriteReport();
+        }
+        catch (Exception ex)
+        {
+            Trace("WriteReport falhou: " + ex);
+            ok = false;
+        }
+
+        _watchdog.Dispose();
+        return ok ? 0 : 1;
+    }
+
+    // ---- cleanup flow ----------------------------------------------------------------------------------------------------------
+
+    private async Task CleanupSteps()
+    {
+        await Step("Limpeza: tela e regras", async () =>
+        {
+            Go("cleanup");
+            await Settle();
+            ExpectView<CleanupView>();
+            Check(_vm.Cleanup.IsEnabled, "a limpeza está desativada neste computador: " + _vm.Cleanup.DisabledReason);
+            Check(_vm.Cleanup.RulesLine.Contains("14", StringComparison.Ordinal), "o texto das regras não menciona 14 dias");
+            await Shot("limpeza-inicio", "cleanup");
+        });
+
+        if (_o.CleanupFolder is null)
+        {
+            return;
+        }
+
+        await Step("Limpeza: buscar candidatos na pasta de teste", async () =>
+        {
+            _services.CleanupStartFolder = _o.CleanupFolder;
+            await _vm.Cleanup.SearchAsync();
+            await Settle();
+            Check(_vm.Cleanup.IsReviewing, "a busca não chegou à tela de revisão");
+            if (_o.ExpectEligible is int expected)
+            {
+                Check(_vm.Cleanup.Candidates.Count == expected, $"esperava {expected} candidato(s) elegível(is), encontrou {_vm.Cleanup.Candidates.Count}");
+            }
+
+            Check(_vm.Cleanup.SelectedCount == _vm.Cleanup.Candidates.Count, "a limpeza rápida deveria marcar todos os elegíveis");
+            if (_o.ExpectInaccessible)
+            {
+                Check(_vm.Cleanup.SearchSummary.Contains("sem permissão", StringComparison.Ordinal), "a pasta sem permissão deveria ter sido contada e ignorada: " + _vm.Cleanup.SearchSummary);
+            }
+
+            foreach (CandidateRow row in _vm.Cleanup.Candidates)
+            {
+                Check(PathStartsWith(row.Candidate.Path, _o.CleanupFolder), "candidato fora da pasta de teste: " + row.Candidate.Path);
+            }
+
+            CommandManager.InvalidateRequerySuggested();
+            await Settle();
+            Check(ButtonFor(_vm.Cleanup.SimulateCommand) is { IsVisible: true, IsEnabled: true }, "o botão “Simular” deveria estar visível e habilitado na tela de revisão");
+            await Shot("limpeza-revisao", "cleanup");
+        });
+
+        await Step("Limpeza: modo por objetivo e seleção personalizada invalidam a simulação", async () =>
+        {
+            if (_vm.Cleanup.Candidates.Count == 0)
+            {
+                return;
+            }
+
+            _vm.Cleanup.IsGoal = true;
+            _vm.Cleanup.GoalText = "1";
+            _vm.Cleanup.GoalUnitIndex = 0;
+            await Settle();
+            Check(_vm.Cleanup.SelectedCount >= 1, "o modo por objetivo não selecionou nada");
+            _vm.Cleanup.IsQuick = true;
+            await Settle();
+            Check(_vm.Cleanup.SelectedCount == _vm.Cleanup.Candidates.Count, "voltar à limpeza rápida não remarcou todos");
+        });
+
+        await Step("Limpeza: simulação não altera nada", async () =>
+        {
+            string[] before = [.. _vm.Cleanup.Candidates.Select(c => c.Candidate.Path)];
+            await _vm.Cleanup.SimulateAsync();
+            await Settle();
+            Check(_vm.Cleanup.IsSimulated, "a simulação não foi concluída");
+            Check(_vm.Cleanup.Plan is not null, "não há plano após simular");
+            foreach (string p in before)
+            {
+                Check(File.Exists(p), "a simulação não pode mexer em arquivos, mas sumiu: " + p);
+            }
+
+            // The command is re-evaluated on input events; the harness has none, so ask for it, then check the REAL button the person would click.
+            CommandManager.InvalidateRequerySuggested();
+            await Settle();
+            Check(ButtonFor(_vm.Cleanup.RecycleCommand) is { IsVisible: true, IsEnabled: true }, "o botão “Mover para a Lixeira…” deveria estar visível e habilitado depois da simulação");
+            await Shot("limpeza-simulacao", "cleanup");
+
+            // Changing the selection after a simulation must throw the plan away.
+            if (_vm.Cleanup.Candidates.Count > 0)
+            {
+                CandidateRow first = _vm.Cleanup.Candidates[0];
+                first.IsSelected = !first.IsSelected;
+                Check(_vm.Cleanup.Plan is null && !_vm.Cleanup.IsSimulated, "mudar a seleção deveria descartar a simulação");
+                first.IsSelected = !first.IsSelected;
+                await _vm.Cleanup.SimulateAsync();
+                Check(_vm.Cleanup.IsSimulated && _vm.Cleanup.Plan is not null, "não foi possível simular de novo");
+            }
+        });
+
+        await Step("Janela de confirmação: propriedades de segurança", async () =>
+        {
+            CleanupPlan plan = _vm.Cleanup.Plan ?? throw new CheckFailedException("sem plano para confirmar");
+            var win = new RecycleConfirmWindow(plan) { ShowActivated = false, WindowStartupLocation = WindowStartupLocation.Manual, Left = 40, Top = 40 };
+            try
+            {
+                win.Show();
+                await Settle();
+                Check(win.CancelControl.IsDefault && win.CancelControl.IsCancel, "“Cancelar” deve ser o botão padrão (Enter e Esc cancelam)");
+                Check(!win.ConfirmControl.IsDefault, "o botão de confirmar não pode ser o padrão");
+                Check(win.AcknowledgeBox.IsChecked != true, "a caixa de confirmação deve começar desmarcada");
+                Check(!win.ConfirmControl.IsEnabled, "o botão de confirmar deve começar desabilitado");
+                Check(!win.Confirmed, "a janela não pode começar confirmada");
+                win.AcknowledgeBox.IsChecked = true;
+                await Settle();
+                Check(win.ConfirmControl.IsEnabled, "marcar a caixa deve habilitar o botão");
+                win.AcknowledgeBox.IsChecked = false;
+                await Settle();
+                Check(!win.ConfirmControl.IsEnabled, "desmarcar a caixa deve desabilitar o botão de novo");
+                Check(!win.Confirmed, "a janela não pode estar confirmada sem clique");
+                FrameworkElement root = (FrameworkElement)win.Content;
+                foreach ((string name, FrameworkElement element) in new (string, FrameworkElement)[]
+                         {
+                             ("a caixa de confirmação", win.AcknowledgeBox),
+                             ("“Cancelar”", win.CancelControl),
+                             ("“Mover para a Lixeira”", win.ConfirmControl),
+                         })
+                {
+                    Check(IsWithin(element, root), $"{name} precisa aparecer inteiro na janela de confirmação, sem depender de rolagem");
+                }
+
+                await Shot("limpeza-confirmacao", "confirm", root);
+            }
+            finally
+            {
+                win.Close();
+            }
+        });
+
+        await Step("Limpeza: cancelar a confirmação não move nada", async () =>
+        {
+            CleanupPlan plan = _vm.Cleanup.Plan ?? throw new CheckFailedException("sem plano para confirmar");
+            string[] paths = [.. plan.Approved.Select(i => i.Candidate.Path)];
+            _dialogs.AllowExecute = false;
+            int calls = _dialogs.ConfirmCalls;
+            await _vm.Cleanup.RecycleAsync();
+            await Settle();
+            Check(_dialogs.ConfirmCalls == calls + 1, "a confirmação não foi solicitada");
+            Check(_vm.Cleanup.IsSimulated, "após cancelar, a tela deve continuar na simulação");
+            foreach (string p in paths)
+            {
+                Check(File.Exists(p), "cancelar não pode mover nada, mas sumiu: " + p);
+            }
+        });
+
+        if (!_o.Execute)
+        {
+            return;
+        }
+
+        await Step("Limpeza: confirmar move os arquivos elegíveis para a Lixeira", async () =>
+        {
+            CleanupPlan plan = _vm.Cleanup.Plan ?? throw new CheckFailedException("sem plano para confirmar");
+            string[] paths = [.. plan.Approved.Select(i => i.Candidate.Path)];
+            _dialogs.AllowExecute = true;
+            await _vm.Cleanup.RecycleAsync();
+            await Settle(400);
+            Check(_vm.Cleanup.IsDone, "a limpeza não terminou");
+            CleanupReport report = _vm.Cleanup.Report ?? throw new CheckFailedException("sem relatório");
+            Check(!report.Aborted, "a limpeza foi interrompida: " + report.AbortReason);
+            Check(!report.HasUnprovenDeletion, "algum arquivo sumiu sem prova na Lixeira");
+            if (_o.ExpectMoved is int expected)
+            {
+                Check(report.MovedCount == expected, $"esperava {expected} arquivo(s) na Lixeira, foram {report.MovedCount}");
+            }
+
+            foreach (CleanupItemResult r in report.Items.Where(i => i.Outcome == CleanupItemOutcome.MovedToRecycleBin))
+            {
+                Check(!File.Exists(r.Path), "o arquivo deveria ter saído da pasta: " + r.Path);
+            }
+
+            Check(paths.Length == report.MovedCount + report.SkippedCount + report.FailedCount, "o relatório não contabiliza todos os arquivos do plano");
+            _remainingAfterClean = paths.Length - report.MovedCount;
+            Check(report.LogPath is not null && File.Exists(report.LogPath), "o registro da limpeza não foi gravado");
+            await Shot("limpeza-resultado", "cleanup");
+        });
+
+        await Step("Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado", async () =>
+        {
+            await _vm.Cleanup.SearchAsync();
+            await Settle();
+            Check(_vm.Cleanup.IsReviewing, "a nova busca não chegou à tela de revisão");
+            Check(_vm.Cleanup.Candidates.Count == _remainingAfterClean, $"depois de limpar, esperava {_remainingAfterClean} candidato(s) (só os que foram ignorados, por exemplo por estarem em uso) e a nova busca achou {_vm.Cleanup.Candidates.Count}");
+            foreach (CandidateRow row in _vm.Cleanup.Candidates)
+            {
+                Check(File.Exists(row.Candidate.Path), "um candidato listado não existe mais: " + row.Candidate.Path);
+            }
+            await Shot("limpeza-repeticao", "cleanup");
+        });
+    }
+
+    // ---- helpers ---------------------------------------------------------------------------------------------------------------------
+
+    private async Task Step(string name, Func<Task> body)
+    {
+        var sw = Stopwatch.StartNew();
+        Trace("> " + name);
+        try
+        {
+            await body();
+            _steps.Add(new StepResult(name, true, sw.Elapsed, null));
+            Trace("< ok: " + name);
+        }
+        catch (Exception ex)
+        {
+            _steps.Add(new StepResult(name, false, sw.Elapsed, ex is CheckFailedException ? ex.Message : ex.ToString()));
+            Trace("< FALHOU: " + name + " :: " + (ex is CheckFailedException ? ex.Message : ex.ToString()));
+        }
+    }
+
+    /// <summary>Step-by-step trail, flushed as it happens, so a crash still says where it was.</summary>
+    private void Trace(string message)
+    {
+        try
+        {
+            _services.DataFiles.AppendLine(Path.Combine(_o.OutDir, "smoke-trace.log"), string.Create(CultureInfo.InvariantCulture, $"{_clock.Elapsed.TotalSeconds:F2}s {message}"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // The trail is a diagnostic aid only.
+        }
+    }
+
+    private static void Check(bool condition, string message)
+    {
+        if (!condition)
+        {
+            throw new CheckFailedException(message);
+        }
+    }
+
+    private void Go(string id) => _vm.Navigate(id);
+
+    private void ExpectView<T>()
+        where T : DependencyObject =>
+        Check(UiTree.Of<T>(_window.Host).Any(), $"a tela {typeof(T).Name} não foi criada");
+
+    private static bool PathStartsWith(string path, string folder) =>
+        path.StartsWith(folder.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
+    private Button? ButtonFor(ICommand command) =>
+        UiTree.Of<Button>(_window.Host).FirstOrDefault(b => ReferenceEquals(b.Command, command));
+
+    private static bool IsWithin(FrameworkElement element, FrameworkElement container)
+    {
+        Rect box = element.TransformToAncestor(container).TransformBounds(new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+        return element.IsVisible && box.Left >= -0.5 && box.Top >= -0.5 && box.Right <= container.ActualWidth + 0.5 && box.Bottom <= container.ActualHeight + 0.5;
+    }
+
+    private async Task Settle(int milliseconds = 150)
+    {
+        _window.UpdateLayout();
+        await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+        await Task.Delay(milliseconds);
+        await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+        _window.UpdateLayout();
+    }
+
+    private async Task Shot(string name, string page, FrameworkElement? element = null)
+    {
+        FrameworkElement target = element ?? (FrameworkElement)_window.Content;
+        target.UpdateLayout();
+        if (target.Margin != default)
+        {
+            // RenderTargetBitmap draws an element at its layout offset, so a margin would shift the picture and crop its right and bottom edges.
+            _layoutWarnings.Add($"[{page}] o elemento fotografado tem margem ({target.Margin}); a captura sairia deslocada e cortada");
+        }
+
+        foreach (string clipped in UiTree.Clipped(target).Distinct())
+        {
+            _layoutWarnings.Add($"[{page}] {clipped}");
+        }
+
+        DpiScale dpi = VisualTreeHelper.GetDpi(target);
+        int w = Math.Max(1, (int)Math.Ceiling(target.ActualWidth * dpi.DpiScaleX));
+        int h = Math.Max(1, (int)Math.Ceiling(target.ActualHeight * dpi.DpiScaleY));
+        var bitmap = new RenderTargetBitmap(w, h, 96 * dpi.DpiScaleX, 96 * dpi.DpiScaleY, PixelFormats.Pbgra32);
+        bitmap.Render(target);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var ms = new MemoryStream();
+        encoder.Save(ms);
+        string file = string.Create(CultureInfo.InvariantCulture, $"{++_shotNumber:00}-{name}.png");
+        _services.DataFiles.WriteAllBytesAtomic(Path.Combine(_o.OutDir, "screenshots", file), ms.ToArray());
+        _shots.Add(file);
+        await Task.CompletedTask;
+    }
+
+    private bool WriteReport()
+    {
+        bool stepsOk = _steps.All(s => s.Passed);
+        IReadOnlyList<string> binding = _bindingErrors.Messages;
+        bool ok = stepsOk && binding.Count == 0 && App.SmokeUnhandled.Count == 0;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("# Tersus — teste de fumaça da interface (programa publicado)");
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Resultado: **{(ok ? "APROVADO" : "REPROVADO")}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Versão do Tersus: {_vm.VersionText}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Sistema: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture}); {RuntimeInformation.FrameworkDescription}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Alto contraste do Windows ativo: {SystemParameters.HighContrast}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Duração: {_clock.Elapsed:mm\\:ss}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Pasta analisada: `{_o.ScanFolder}`");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Pasta de teste da limpeza: `{_o.CleanupFolder ?? "(não usada)"}`; confirmar limpeza permitido: {_o.Execute}");
+        sb.AppendLine();
+        sb.AppendLine("## Etapas");
+        sb.AppendLine();
+        sb.AppendLine("| Etapa | Resultado | Tempo | Detalhe |");
+        sb.AppendLine("|---|---|---|---|");
+        foreach (StepResult s in _steps)
+        {
+            string detail = (s.Detail ?? string.Empty).Replace("|", "\\|", StringComparison.Ordinal).Replace("\r", string.Empty, StringComparison.Ordinal).Replace("\n", " ⏎ ", StringComparison.Ordinal);
+            if (detail.Length > 600)
+            {
+                detail = detail[..600] + "…";
+            }
+
+            sb.AppendLine(CultureInfo.InvariantCulture, $"| {s.Name} | {(s.Passed ? "ok" : "**FALHOU**")} | {s.Elapsed.TotalSeconds:F1} s | {detail} |");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"## Erros de ligação de dados (binding): {binding.Count}");
+        foreach (string b in binding.Take(60))
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- {b.Replace('\n', ' ').Replace('\r', ' ')}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"## Exceções não tratadas na interface: {App.SmokeUnhandled.Count}");
+        foreach (IGrouping<string, string> group in App.SmokeUnhandled.GroupBy(u => u.Split('\n')[0].Trim()).Take(8))
+        {
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- {group.Count()}x: {group.Key}");
+            sb.AppendLine("```");
+            foreach (string line in group.First().Split('\n').Skip(1).Take(14))
+            {
+                sb.AppendLine(line.TrimEnd());
+            }
+
+            sb.AppendLine("```");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine(CultureInfo.InvariantCulture, $"## Avisos de layout (elementos que receberam menos espaço do que pediram): {_layoutWarnings.Distinct().Count()}");
+        foreach (string w in _layoutWarnings.Distinct().Take(80))
+        {
+            sb.AppendLine($"- {w}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("## Medições");
+        foreach (string m in _metrics)
+        {
+            sb.AppendLine($"- {m}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("## Capturas de tela");
+        foreach (string shot in _shots)
+        {
+            sb.AppendLine($"- screenshots/{shot}");
+        }
+
+        if (_dialogs.Messages.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("## Mensagens que a interface tentou mostrar");
+            foreach (string m in _dialogs.Messages)
+            {
+                sb.AppendLine($"- {m.Replace('\n', ' ')}");
+            }
+        }
+
+        _services.DataFiles.WriteAllTextAtomic(Path.Combine(_o.OutDir, "smoke-report.md"), sb.ToString());
+        return ok;
+    }
+}

@@ -1,0 +1,67 @@
+<UserControl x:Class="Tersus.App.Views.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,24,28,28" MaxWidth="1000" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource PageTitle}" Text="Histórico: como o disco cresceu" />
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,14"
+                       Text="Cada análise completa vira um pequeno resumo (totais e pastas de primeiro nível, sem nomes de arquivos). Fica só neste computador, até 24 resumos." />
+
+            <Border Style="{StaticResource Card}" Visibility="{Binding HasData, Converter={StaticResource NotBoolToVis}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Ainda não há histórico" />
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding EmptyText}" />
+                    <Button Content="Ir para Início" Command="{Binding GoHomeCommand}" Margin="0,12,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Visibility="{Binding HasData, Converter={StaticResource BoolToVis}}">
+                <WrapPanel Margin="0,0,0,10">
+                    <TextBlock Text="Local:" Style="{StaticResource Body}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox Width="360" Margin="0,0,10,0" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedRoot, Mode=TwoWay}" AutomationProperties.Name="Local analisado" />
+                    <Button Style="{StaticResource SecondaryButton}" Content="Apagar histórico…" Command="{Binding ClearCommand}" />
+                </WrapPanel>
+
+                <Border Style="{StaticResource Card}">
+                    <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected, Mode=TwoWay}" MaxHeight="340"
+                             ItemContainerStyle="{StaticResource RowListItem}" BorderThickness="0" Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Análises guardadas, da mais recente para a mais antiga">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="210" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding WhenText}" Style="{StaticResource Body}" VerticalAlignment="Center" />
+                                    <ProgressBar Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" Height="10" Margin="8,0,12,0" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding SizeText}" Style="{StaticResource Body}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding DeltaText}" Style="{StaticResource Muted}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Comparação com a análise anterior" />
+                        <TextBlock Style="{StaticResource Body}" Text="{Binding ComparisonHeadline}" />
+                        <DataGrid Margin="0,10,0,0" MaxHeight="360" ItemsSource="{Binding Deltas}" CanUserSortColumns="False"
+                                  Visibility="{Binding HasDeltas, Converter={StaticResource BoolToVis}}" AutomationProperties.Name="Pastas que mais mudaram">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Pasta" Binding="{Binding Name, Mode=OneWay}" Width="*" />
+                                <DataGridTextColumn Header="Antes" Binding="{Binding BeforeText, Mode=OneWay}" Width="100" />
+                                <DataGridTextColumn Header="Depois" Binding="{Binding AfterText, Mode=OneWay}" Width="100" />
+                                <DataGridTextColumn Header="Variação" Binding="{Binding DeltaText, Mode=OneWay}" Width="110" />
+                                <DataGridTextColumn Header="O que houve" Binding="{Binding KindText, Mode=OneWay}" Width="100" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

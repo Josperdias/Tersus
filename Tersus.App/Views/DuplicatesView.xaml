@@ -1,0 +1,119 @@
+<UserControl x:Class="Tersus.App.Views.DuplicatesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Tersus.App.Controls">
+    <Grid Margin="28,24,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Style="{StaticResource PageTitle}" Text="Duplicados" />
+            <Border Style="{StaticResource BannerInfo}" Margin="0,4,0,12">
+                <TextBlock Style="{StaticResource Body}"
+                           Text="Somente relatório: o Tersus mostra cópias idênticas, mas NUNCA apaga nem move duplicados. Quem decide qual cópia manter é você, no Explorador." />
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12">
+            <StackPanel>
+                <WrapPanel>
+                    <Button Style="{StaticResource SecondaryButton}" Content="Escolher pasta…" Command="{Binding ChooseFolderCommand}" />
+                    <ComboBox Width="170" Margin="0,0,10,0" ItemsSource="{Binding MinSizeLabels}" SelectedIndex="{Binding MinIndex, Mode=TwoWay}"
+                              IsEnabled="{Binding IsIdle}" AutomationProperties.Name="Tamanho mínimo dos arquivos" />
+                    <Button Content="Procurar duplicados" Command="{Binding StartCommand}" />
+                    <Button Style="{StaticResource SecondaryButton}" Content="Cancelar" Command="{Binding CancelCommand}"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                </WrapPanel>
+                <TextBlock Text="{Binding FolderText}" Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,10,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                <ProgressBar IsIndeterminate="True" Margin="0,8,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                <TextBlock Text="{Binding ProgressText}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                <TextBlock Text="{Binding Status}" Style="{StaticResource Body}" Margin="0,8,0,0" />
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,4,0,0"
+                           Visibility="{Binding Summary, Converter={StaticResource NullToVis}}" />
+                <ItemsControl ItemsSource="{Binding Warnings}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Style="{StaticResource Muted}" Margin="0,2" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Wide: groups and copies side by side. Narrow (small window or large zoom): the copies go under the groups and the area scrolls as a whole. -->
+        <ScrollViewer Grid.Row="2" Style="{StaticResource TwoPaneScroll}" c:TwoPane.Breakpoint="660">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1.4*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Style="{StaticResource TwoPaneLeft}">
+                    <ListBox ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                             ItemContainerStyle="{StaticResource RowListItem}" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardBorder}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Grupos de arquivos idênticos">
+                        <ListBox.Style>
+                            <Style TargetType="ListBox">
+                                <Style.Triggers>
+                                    <Trigger Property="c:TwoPane.IsStacked" Value="True">
+                                        <Setter Property="Height" Value="320" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.Style>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Header}" Style="{StaticResource Body}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Potential}" Style="{StaticResource Muted}" />
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" FontStyle="Italic" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+
+                <Grid Style="{StaticResource TwoPaneRight}">
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <TextBlock Style="{StaticResource Body}" Text="Selecione um grupo para ver onde estão as cópias."
+                                       Visibility="{Binding SelectedGroup, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False"
+                                          Visibility="{Binding SelectedGroup, Converter={StaticResource NullToVis}}">
+                                <ItemsControl ItemsSource="{Binding SelectedGroup.Files}" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" Style="{StaticResource Body}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Folder}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding Folder}" />
+                                                    <TextBlock Text="{Binding Modified, Converter={StaticResource LocalDate}}" Style="{StaticResource Muted}" />
+                                                    <TextBlock Style="{StaticResource Muted}" FontWeight="SemiBold" Text="Local sensível (documentos, aplicativos ou sistema): pense bem antes de mexer."
+                                                               Visibility="{Binding Sensitive, Converter={StaticResource BoolToVis}}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="Mostrar no Explorador" VerticalAlignment="Top"
+                                                        Command="{Binding DataContext.ExplorerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Margin="12,0,0,0" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

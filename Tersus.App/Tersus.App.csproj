@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Native WPF desktop app: no web view, no server, no network, no NuGet packages. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Tersus</AssemblyName>
+    <RootNamespace>Tersus.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Tersus.ico</ApplicationIcon>
+    <AssemblyTitle>Tersus</AssemblyTitle>
+    <Description>Tersus: analise o armazenamento e recupere espaço com segurança.</Description>
+    <SatelliteResourceLanguages>pt-BR;en</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The WPF SDK leaves System.IO out of the implicit usings (Path clashes with System.Windows.Shapes.Path); no file here imports Shapes. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tersus.Core\Tersus.Core.csproj" />
+    <Resource Include="Assets\Tersus.ico" />
+  </ItemGroup>
+</Project>

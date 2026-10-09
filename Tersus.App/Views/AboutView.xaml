@@ -1,0 +1,67 @@
+<UserControl x:Class="Tersus.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,24,28,28" MaxWidth="1000" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource PageTitle}" Text="Segurança e sobre o Tersus" />
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,14" Text="{Binding Version, StringFormat='Versão {0}'}" />
+
+            <Border Style="{StaticResource BannerOk}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="A única ação do Tersus" />
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding OnlyAction}" />
+                    <TextBlock Style="{StaticResource Body}" Margin="0,6,0,0" Text="{Binding Revalidation}" />
+                    <TextBlock Style="{StaticResource Body}" Margin="0,6,0,0" FontWeight="SemiBold" Text="{Binding RecycleBinNote}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="{Binding CleanupState}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="O que o Tersus NUNCA limpa" />
+                    <ItemsControl ItemsSource="{Binding NeverList}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Style="{StaticResource BulletText}" Text="{Binding StringFormat='✕  {0}'}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="O que o Tersus sempre faz" />
+                    <ItemsControl ItemsSource="{Binding AlwaysList}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Style="{StaticResource BulletText}" Text="{Binding StringFormat='✓  {0}'}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" Text="{Binding SizesAreLogical}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Seus dados no Tersus" />
+                    <TextBlock Style="{StaticResource Body}" Text="O Tersus guarda apenas o histórico (resumos sem nomes de arquivos) e o registro de cada limpeza, nesta pasta:" />
+                    <TextBox Text="{Binding DataFolder, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent" Margin="0,4,0,0"
+                             AutomationProperties.Name="Pasta de dados do Tersus" />
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button Style="{StaticResource SecondaryButton}" Content="Abrir pasta de dados" Command="{Binding OpenDataFolderCommand}" />
+                        <Button Style="{StaticResource SecondaryButton}" Content="Abrir a Lixeira" Command="{Binding OpenRecycleBinCommand}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource BannerWarn}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Sobre a assinatura digital" />
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding UnsignedNote}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

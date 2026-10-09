@@ -1,0 +1,55 @@
+name: Tersus - Testes Windows, EXE e instalador
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Testes de política, histórico, duplicados e leitura
+        run: dotnet run --project Tersus.Tests/Tersus.Tests.csproj --configuration Release
+      - name: Compilar interface WPF nativa
+        run: dotnet build Tersus.App/Tersus.App.csproj --configuration Release -warnaserror
+      - name: Publicar executável com .NET incluído
+        shell: pwsh
+        run: >
+          dotnet publish Tersus.App/Tersus.App.csproj -c Release -r win-x64
+          --self-contained true -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false
+          -o publish
+      - name: Verificação de integridade da publicação
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'publish/Tersus.exe')) { throw 'Tersus.exe não foi criado' }
+          Get-FileHash 'publish/Tersus.exe' -Algorithm SHA256 | Format-List
+          Get-ChildItem 'publish/' | Select-Object Name,Length
+      - name: Instalar Inno Setup para empacotamento
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+      - name: Criar instalador per-user
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" 'installer\Tersus.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup falhou: $LASTEXITCODE" }
+          if (!(Test-Path 'dist/Tersus-Setup-0.2.0-x64.exe')) { throw 'Instalador ausente' }
+          Get-FileHash 'dist/Tersus-Setup-0.2.0-x64.exe' -Algorithm SHA256 | Format-List
+      - name: Artefatos - EXE nativo e instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tersus-0.2.0-win-x64
+          path: |
+            publish/**
+            dist/*.exe
+          if-no-files-found: error
+          retention-days: 21

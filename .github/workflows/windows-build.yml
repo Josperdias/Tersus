@@ -1,0 +1,245 @@
+name: Tersus - Testes, EXE e instalador (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publicar_capturas:
+        description: 'Publicar as capturas de tela e os relatórios na branch "evidencias" (para ver no navegador, sem baixar o ZIP)'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tersus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-windows:
+    name: Testes no Windows (política, Lixeira real, links, travas)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Ambiente
+        shell: pwsh
+        run: |
+          dotnet --info
+          [System.Environment]::OSVersion | Format-List
+          "TEMP=$env:TEMP"
+          "USERPROFILE=$env:USERPROFILE"
+
+      - name: Testes automatizados (Core, auditoria estática e integração Windows)
+        shell: pwsh
+        run: dotnet run --project Tersus.Tests/Tersus.Tests.csproj -c Release -- --junit test-results/junit.xml --markdown test-results/resumo.md
+
+      - name: Resumo no painel da execução
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path test-results/resumo.md) { Get-Content test-results/resumo.md | Add-Content -Path $env:GITHUB_STEP_SUMMARY }
+
+      - name: Publicar resultados dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-testes-windows
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  build-windows:
+    name: Compilar, publicar o EXE, testar a interface real e gerar o instalador (Windows)
+    # Only builds deliverables when the safety suite is green on BOTH systems.
+    needs: [tests-windows, tests-linux]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Versão do produto (fonte única - Directory.Build.props)
+        id: ver
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content -LiteralPath Directory.Build.props
+          $v = @($props.Project.PropertyGroup | ForEach-Object { $_.VersionPrefix } | Where-Object { $_ })[0]
+          if (-not $v) { throw 'VersionPrefix não encontrado em Directory.Build.props' }
+          "version=$v" | Add-Content -Path $env:GITHUB_OUTPUT
+          "Versão: $v"
+
+      - name: Compilar a solução inteira (avisos viram erros)
+        shell: pwsh
+        run: dotnet build Tersus.sln -c Release -warnaserror
+
+      - name: Publicar o executável nativo (win-x64, autossuficiente, arquivo único)
+        shell: pwsh
+        run: >
+          dotnet publish Tersus.App/Tersus.App.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false
+          -p:SourceRevisionId=${{ github.event.pull_request.head.sha || github.sha }} -o publish
+
+      - name: Inspecionar o executável (conteúdo, tamanho, assinatura, SHA-256)
+        shell: pwsh
+        run: |
+          Get-ChildItem publish | Format-Table Name, Length
+          $exe = Get-Item publish/Tersus.exe
+          "Tamanho: {0:N1} MB" -f ($exe.Length / 1MB)
+          $sig = Get-AuthenticodeSignature $exe.FullName
+          "Assinatura Authenticode: $($sig.Status)  (esperado: NotSigned - o programa ainda não é assinado)"
+          "SHA-256: $((Get-FileHash $exe.FullName -Algorithm SHA256).Hash)"
+          [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe.FullName) | Format-List ProductName, ProductVersion, FileVersion, CompanyName, FileDescription, LegalCopyright
+
+      - name: Teste de fumaça do EXE publicado (interface real + Lixeira real + verificação independente)
+        shell: pwsh
+        run: ./tools/ci/Invoke-SmokeTest.ps1 -Exe publish/Tersus.exe -OutDir evidencias/exe-publicado -ScanFolder $env:GITHUB_WORKSPACE -BigScanFolder $env:SystemRoot
+
+      - name: Inno Setup 6
+        id: iscc
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path -LiteralPath $iscc)) { choco install innosetup --no-progress -y }
+          if (-not (Test-Path -LiteralPath $iscc)) { throw 'ISCC.exe não encontrado' }
+          "iscc=$iscc" | Add-Content -Path $env:GITHUB_OUTPUT
+          $uninstallKey = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1'
+          $inno = if (Test-Path -LiteralPath $uninstallKey) { [string](Get-ItemProperty -LiteralPath $uninstallKey).DisplayVersion } else { 'desconhecida' }
+          "inno=$inno" | Add-Content -Path $env:GITHUB_OUTPUT
+          "Inno Setup: $inno"
+          $global:LASTEXITCODE = 0
+
+      - name: Gerar o instalador (por usuário, sem administrador)
+        shell: pwsh
+        run: |
+          & "${{ steps.iscc.outputs.iscc }}" /Q "/DAppVersion=${{ steps.ver.outputs.version }}" "/DSourceExe=$env:GITHUB_WORKSPACE\publish\Tersus.exe" "/DOutputDirectory=$env:GITHUB_WORKSPACE\dist" installer\Tersus.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC falhou com código $LASTEXITCODE" }
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Instalar, usar e desinstalar (instalador silencioso numa máquina limpa)
+        shell: pwsh
+        run: >
+          ./tools/ci/Test-Installer.ps1
+          -Setup "dist/Tersus-Setup-${{ steps.ver.outputs.version }}-x64.exe"
+          -PublishedExe publish/Tersus.exe
+          -WorkDir evidencias/instalador
+          -ScanFolder $env:GITHUB_WORKSPACE
+          -Version ${{ steps.ver.outputs.version }}
+
+      - name: Baixar o resumo dos testes (job do Windows)
+        uses: actions/download-artifact@v4
+        with:
+          name: resultados-testes-windows
+          path: resultados-testes-windows
+
+      - name: SHA-256 dos entregáveis
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force entrega | Out-Null
+          Copy-Item publish/Tersus.exe entrega/
+          Copy-Item "dist/Tersus-Setup-*-x64.exe" entrega/
+          Push-Location entrega
+          Get-ChildItem -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object {
+            "{0} *{1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name
+          } | Set-Content -Encoding ascii SHA256SUMS.txt
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '### Entregáveis (SHA-256)'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
+          Get-Content entrega/SHA256SUMS.txt | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value 'O executável e o instalador **não são assinados digitalmente**; confira o SHA-256 acima.'
+
+      - name: Relatório de build (gerado pela própria pipeline)
+        shell: pwsh
+        run: >
+          ./tools/ci/New-BuildReport.ps1
+          -OutFile entrega/RELATORIO_DE_BUILD.md
+          -Version ${{ steps.ver.outputs.version }}
+          -Commit ${{ github.event.pull_request.head.sha || github.sha }}
+          -RunUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          -InnoVersion "${{ steps.iscc.outputs.inno }}"
+          -TestSummary resultados-testes-windows/resumo.md
+          -SmokeDir evidencias
+          -InstallerDir evidencias/instalador
+          -SumsFile entrega/SHA256SUMS.txt
+
+      - name: Publicar o executável e o instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tersus-${{ steps.ver.outputs.version }}-win-x64
+          path: entrega/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publicar as evidências (capturas de tela, relatórios, registros)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-interface-e-instalador
+          path: evidencias/
+          if-no-files-found: warn
+          retention-days: 30
+
+  tests-linux:
+    name: Testes portáteis no Linux (verificação cruzada)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Testes portáteis
+        run: dotnet run --project Tersus.Tests/Tersus.Tests.csproj -c Release -- --junit test-results/junit.xml --markdown test-results/resumo.md
+      - name: Resumo no painel da execução
+        if: always()
+        run: |
+          if [ -f test-results/resumo.md ]; then cat test-results/resumo.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+  publicar-capturas:
+    name: Publicar capturas e relatórios na branch "evidencias" (opcional, só execução manual)
+    # Opt-in. This is the ONLY job with write access to the repository, and it never runs for pull requests or pushes.
+    if: ${{ !cancelled() && needs.build-windows.result != 'skipped' && github.event_name == 'workflow_dispatch' && inputs.publicar_capturas }}
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Baixar as evidências
+        uses: actions/download-artifact@v4
+        with:
+          name: evidencias-interface-e-instalador
+          path: evidencias
+
+      - name: Enviar para a branch "evidencias" (um único commit, sobrescrito a cada vez)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd evidencias
+          printf 'Evidências da execução %s do commit %s.\nGerado automaticamente pela CI; esta branch pode ser apagada.\n' "$GITHUB_RUN_ID" "$GITHUB_SHA" > LEIA-ME.txt
+          git init -q -b evidencias
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "Evidências da execução ${GITHUB_RUN_ID} do commit ${GITHUB_SHA}"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/evidencias

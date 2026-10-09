@@ -1,0 +1,50 @@
+<Application x:Class="Tersus.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:Tersus.App.Services"
+             xmlns:know="clr-namespace:Tersus.Core.Knowledge;assembly=Tersus.Core"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Index 0 is the colour palette: it is swapped for the high-contrast palette when Windows high contrast is on. -->
+                <ResourceDictionary Source="Theme/Palette.xaml" />
+                <ResourceDictionary Source="Theme/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <svc:InverseBoolToVisibilityConverter x:Key="NotBoolToVis" />
+            <svc:InverseBoolConverter x:Key="NotBool" />
+            <svc:NullToVisibilityConverter x:Key="NullToVis" />
+            <svc:CountToVisibilityConverter x:Key="CountToVis" />
+            <svc:BytesToTextConverter x:Key="BytesText" />
+            <svc:LocalDateConverter x:Key="LocalDate" />
+            <svc:RiskToBrushConverter x:Key="RiskBrush" />
+            <svc:RiskToTextConverter x:Key="RiskText" />
+            <svc:ConfidenceToTextConverter x:Key="ConfidenceText" />
+            <svc:SeverityToBrushConverter x:Key="SeverityBrush" />
+            <svc:ResourceKeyToGeometryConverter x:Key="IconGeometry" />
+
+            <!-- "What is this?" card: shown for the selected folder or file. It always states how sure the explanation is, and it never offers an action. -->
+            <DataTemplate DataType="{x:Type know:Explanation}">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" />
+                        <Border Style="{StaticResource Badge}" Background="{Binding Risk, Converter={StaticResource RiskBrush}}" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding Risk, Converter={StaticResource RiskText}}" Foreground="{DynamicResource OnStrong}" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" />
+                        </Border>
+                        <TextBlock Text="O que é" Style="{StaticResource Muted}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding WhatItIs}" Style="{StaticResource Body}" Margin="0,0,0,8" />
+                        <TextBlock Text="De onde vem" Style="{StaticResource Muted}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Origin}" Style="{StaticResource Body}" Margin="0,0,0,8" />
+                        <TextBlock Text="Se for removido" Style="{StaticResource Muted}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Consequence}" Style="{StaticResource Body}" Margin="0,0,0,8" />
+                        <TextBlock Text="O que fazer" Style="{StaticResource Muted}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Recommendation}" Style="{StaticResource Body}" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding Confidence, Converter={StaticResource ConfidenceText}}" Style="{StaticResource Muted}" FontStyle="Italic" />
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

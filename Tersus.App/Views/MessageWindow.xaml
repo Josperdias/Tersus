@@ -1,0 +1,20 @@
+<Window x:Class="Tersus.App.Views.MessageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="560" SizeToContent="Height" MaxHeight="620" MinWidth="420"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{DynamicResource PageBg}" FontFamily="{StaticResource UiFont}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto" Focusable="False" Margin="0,0,0,18">
+            <TextBlock x:Name="MessageText" Style="{StaticResource Body}" FontSize="15" />
+        </ScrollViewer>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Style="{StaticResource SecondaryButton}" IsDefault="True" IsCancel="True" Click="OnCancel" Content="Cancelar" />
+            <Button x:Name="ConfirmButton" Content="Confirmar" Margin="0" Click="OnConfirm" Visibility="Collapsed" />
+        </StackPanel>
+    </Grid>
+</Window>
