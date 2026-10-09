@@ -1,9 +1,10 @@
 # Relatório de validação do Tersus 0.3.0
 
 Registro **honesto e verificável** do que foi testado, do que falhou pelo caminho, de como cada defeito foi corrigido e do que **não** foi provado.
-Os números abaixo vêm da execução de referência da pipeline, [`actions/runs/37969649699`](https://github.com/Josperdias/Tersus/actions/runs/37969649699)
-(commit `48f2f4a`, PR #1). Cada execução gera o seu próprio relatório (`RELATORIO_DE_BUILD.md`, dentro do pacote de artefatos); os valores variam um pouco
-de uma execução para outra (as máquinas virtuais são compartilhadas) e os hashes mudam a cada commit.
+Os números abaixo vêm da execução de referência da pipeline, [`actions/runs/37991199639`](https://github.com/Josperdias/Tersus/actions/runs/37991199639)
+(commit `95a1680`, PR #1: o último que mexeu em código; os commits seguintes só alteram documentação). Cada execução gera o seu próprio relatório
+(`RELATORIO_DE_BUILD.md`, dentro do pacote de artefatos); os valores variam um pouco de uma execução para outra (as máquinas virtuais são compartilhadas)
+e os hashes mudam a cada commit.
 
 > **Ambiente:** máquinas virtuais descartáveis do GitHub Actions (`windows-latest`, Windows Server 2025, build 10.0.26100, .NET SDK 10.0.401, Inno Setup 6.7.1).
 > **Não** foi usada máquina física, nem Windows 10, nem leitor de tela, nem reinicialização. O EXE e o instalador **não são assinados**.
@@ -13,7 +14,7 @@ de uma execução para outra (as máquinas virtuais são compartilhadas) e os ha
 | Item | Resultado |
 |---|---|
 | Build da solução inteira, `-warnaserror` | 0 avisos, 0 erros |
-| Testes automatizados no Windows | **215 no total: 214 aprovados, 0 falhas, 1 ignorado** (44,3 s) |
+| Testes automatizados no Windows | **215 no total: 214 aprovados, 0 falhas, 1 ignorado** (52,4 s) |
 | Testes portáteis no Linux | verde |
 | Auditoria estática de segurança (12 testes) | verde, inclusive com os testes de mutação do próprio auditor |
 | `Tersus.exe` (win-x64, autossuficiente, arquivo único) | ≈ 59 MB · SHA-256 no `SHA256SUMS.txt` do pacote · **sem assinatura** |
@@ -27,13 +28,13 @@ Confira os que acompanham o artefato que você baixar (`SHA256SUMS.txt`); a desc
 
 ### Medições (EXE publicado, máquina virtual)
 
-- Cancelar a análise da unidade inteira (`C:\`): a tela voltou ao normal em **0,01 s** (0,40 s na execução anterior); a análise parcial **não** entrou no histórico.
-- Árvore grande (`C:\Windows`: 169.966 arquivos, 41.025 pastas, 32,1 GB lógicos, 3 pastas sem permissão):
-  - passada 1, **disco frio**: 47,6 s (≈ 3.570 arquivos/s);
-  - passada 2, **cache quente**: 1,6 s (≈ 105.000 arquivos/s).
-- Memória: pico do conjunto de trabalho **297 MB** (263 MB antes de analisar); memória gerenciada retida depois das análises: 0,2 MB.
-- Interface: o maior intervalo sem resposta do thread da interface durante as análises foi de **93 ms**.
-- Programa instalado: janela principal visível **0,9 s** depois de iniciar (provavelmente com as bibliotecas nativas do arquivo único já extraídas pela execução anterior do mesmo arquivo; o tempo de uma primeira execução absoluta não foi medido).
+- Cancelar a análise da unidade inteira (`C:\`): a tela voltou ao normal em **0,03 s** (entre 0,01 s e 0,40 s nas últimas execuções); a análise parcial **não** entrou no histórico.
+- Árvore grande (`C:\Windows`: 169.965 arquivos, 41.024 pastas, 32,2 GB lógicos, 3 pastas sem permissão):
+  - passada 1, **disco frio**: 46,8 s (≈ 3.630 arquivos/s);
+  - passada 2, **cache quente**: 2,1 s (≈ 82.600 arquivos/s).
+- Memória: pico do conjunto de trabalho **295 MB** (271 MB antes de analisar); memória gerenciada retida depois das análises: 0,2 MB.
+- Interface: o maior intervalo sem resposta do thread da interface durante as análises foi de **63 ms** (93 ms numa execução anterior).
+- Programa instalado: janela principal visível **1,0 s** depois de iniciar (provavelmente com as bibliotecas nativas do arquivo único já extraídas pela execução anterior do mesmo arquivo; o tempo de uma primeira execução absoluta não foi medido).
 - Experimento com os threads de listagem: 2 threads levaram 48,8 s e 4 threads 48,9 s no disco frio (uma medição de cada, em VMs diferentes, portanto indicativo); por isso o padrão **não** foi alterado. Nessa máquina o gargalo é o disco.
 
 ## 2. O que a verificação independente comprova (por fora do programa)
@@ -61,11 +62,13 @@ O script `tools/ci/Invoke-SmokeTest.ps1` prepara uma pasta de teste dentro do TE
 | 8 | idem | “esperava 6 candidatos, encontrou 7” | o arquivo **em uso** aparece na busca e na simulação (que só leem, por projeto) e só é barrado pela trava por arquivo na execução | expectativa corrigida (6 movidos + 1 ignorado como `InUse`) e conferida no registro |
 | 9 | última rodada antes da verde final | passo do Inno Setup falhou | `ISCC /?` devolve código 1 e o GitHub propaga o último código | versão lida do registro de desinstalação |
 | 10 | revisão final deste relatório | este documento dizia “22 etapas” no teste de fumaça e citava hashes de uma execução anterior | erro de contagem meu (o relatório do programa lista 21 etapas; 20 no instalado) e hashes que mudam a cada commit | números conferidos linha a linha contra o log da execução de referência; hashes retirados do texto |
+| 11 | primeira leitura das 23 capturas de tela (a CI passou a publicá-las numa branch `evidencias`, sob demanda) | **defeitos visuais que nenhum teste automático via**: em “Maiores arquivos” a coluna de tamanho aparecia com 1 caractere; em “Aplicativos” datas, versões e o título do tamanho saíam cortados; na “Visão geral” a linha de cada pasta saía truncada (“1 arquivos”) e, com zoom de 140 %, a tela **colapsava** numa coluna de 1 caractere de largura; campos de busca sem dica; coluna “Onde” da limpeza repetia o nome do arquivo e quebrava em 3 linhas; a captura da janela de confirmação saía cortada; texto “Em 0 dia(s)…” no histórico | larguras fixas somadas maiores que o painel, painel de detalhes com largura fixa de 390 px, margem do elemento fotografado deslocando a captura | tabelas com colunas proporcionais e reticências com dica; páginas “lista + detalhes” empilham os detalhes abaixo da lista em janelas estreitas ou com zoom (`TwoPane`); dica nos campos de busca; coluna só com a pasta; plural correto; menu lateral mais compacto; o roteiro agora recusa fotografar elemento com margem |
+| 12 | segunda leitura das capturas | (a) em tela de 768 px de altura a **caixa “Entendi…” que libera “Mover para a Lixeira” ficava abaixo da dobra** da janela de confirmação; (b) o botão “Mover para a Lixeira…” aparecia **cinza** na simulação | (a) só os botões estavam fixados, o texto e a caixa rolavam; (b) o teste chamava os métodos do modelo direto, e o comando só é reavaliado por eventos de entrada (que o teste não gera): na prática o botão habilita, mas o teste **não provava isso** | (a) caixa e botões ficam na barra fixa inferior; (b) o teste de fumaça agora reavalia os comandos e confere que os botões **reais** “Simular” e “Mover para a Lixeira…” estão visíveis e habilitados, e que a caixa e os dois botões da janela de confirmação aparecem inteiros, sem rolagem |
 
 ## 4. O que ainda **não** foi provado
 
 - Funcionamento em **máquina física** e em **Windows 10**; **reinicialização** após instalar/desinstalar (prova-se apenas a ausência de qualquer mecanismo de execução automática).
-- **Revisão visual** das 23 capturas de tela: elas foram geradas e passaram nas verificações automáticas (sem erros de *binding*, sem texto cortado, arquivos de 100 a 180 KB, ou seja, com conteúdo), mas quem escreveu este relatório **não conseguiu abri-las**; vale olhar o artefato `evidencias-interface-e-instalador`.
+- **Revisão visual pelo dono, em tela real.** As capturas foram abertas e revisadas por quem escreveu este relatório (duas rodadas, item 11 e 12 acima), mas só no que a CI produz: uma máquina virtual com tela de **1024 × 768**, DPI 100 %, sem o menu das listas suspensas aberto (menus abertos não aparecem nas capturas). Outras resoluções, DPI 125/150/200 %, vários monitores e o aspecto das listas suspensas (que usam o visual padrão do WPF) precisam do olhar de uma pessoa. Para ver as capturas sem baixar o ZIP, rode o workflow manualmente com `publicar_capturas` (branch `evidencias`).
 - Leitor de tela, tema real de alto contraste (só a troca de paleta foi exercitada), outras escalas de DPI, Windows em outros idiomas.
 - Convivência com antivírus de terceiros e com o SmartScreen.
 - Um disco real do usuário: os tempos acima são de uma VM com disco de rede.

@@ -16,7 +16,7 @@ Tudo abaixo é **honesto e deliberado**: são coisas que não foram feitas, não
 
 ## Validações que ainda faltam
 
-- **Revisão visual das capturas de tela** geradas pela CI (artefato `evidencias-interface-e-instalador`): passaram nas verificações automáticas, mas nenhuma pessoa as olhou ainda.
+- **Revisão visual em tela real pelo dono.** O desenvolvedor revisou as capturas da CI em duas rodadas e corrigiu o que achou (ver `RELATORIO_DE_VALIDACAO.md`, itens 11 e 12), mas elas vêm de uma VM com tela de 1024 × 768 e DPI 100 %. Falta olhar outras resoluções, DPI 125/150/200 % e as listas suspensas abertas (as capturas não mostram menus abertos). Para ver as capturas sem baixar o ZIP: rodar o workflow manualmente com `publicar_capturas` (branch `evidencias`).
 - Windows 10 (a CI usa Windows Server 2025, que compartilha a base do Windows 11 24H2).
 - **Reinicialização** depois da instalação/desinstalação (a CI prova a ausência de qualquer mecanismo de execução automática, mas não reinicia a máquina).
 - Leitor de tela (Narrator/NVDA), tema real de alto contraste do Windows, escalas de DPI 125/150/200 % em monitores reais, Windows em outros idiomas.
@@ -39,6 +39,7 @@ Tudo abaixo é **honesto e deliberado**: são coisas que não foram feitas, não
 | Baixa | Verificação **manual** de atualizações com versões assinadas | depende de D2 e D3 |
 | Baixa | Build ARM64, ReadyToRun e redução de tamanho do EXE | hoje o EXE é autossuficiente e comprimido (59 MB); um build dependente do runtime seria bem menor, mas exigiria o .NET Desktop Runtime instalado |
 | Baixa | Varredura mais rápida em disco **frio** | medido: 48,9 s para 170 mil arquivos numa VM (1,4 s com cache quente); 2 e 4 threads empataram, então o gargalo é o disco. Ler a MFT diretamente exigiria privilégio de administrador e foi descartado |
+| Baixa | Estilizar as listas suspensas (ComboBox) como os demais controles | hoje usam o visual padrão do WPF (funcional, mas cinza e discreto); a troca exige conferir o menu aberto, que as capturas automáticas não mostram |
 | Baixa | Tradução para inglês | a interface é só em português do Brasil |
 
 ## Limitações técnicas conhecidas
