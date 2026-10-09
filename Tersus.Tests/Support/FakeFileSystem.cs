@@ -140,6 +140,43 @@ public sealed class FakeFileSystem : IFileSystem
 
     public VolumeSpace? GetVolumeSpace(string path) => Space;
 
+    private readonly HashSet<string> _unlistable = new(StringComparer.OrdinalIgnoreCase);
+
+    public int ListCalls { get; private set; }
+
+    /// <summary>Makes listing this directory throw UnauthorizedAccessException.</summary>
+    public void DenyListing(string directory) => _unlistable.Add(Norm(directory));
+
+    public IEnumerable<DirectoryEntry> EnumerateDirectory(string path)
+    {
+        ListCalls++;
+        string dir = Norm(path);
+        if (_unlistable.Contains(dir))
+        {
+            throw new UnauthorizedAccessException("denied: " + dir);
+        }
+
+        string prefix = dir.EndsWith('\\') ? dir : dir + "\\";
+        var result = new List<DirectoryEntry>();
+        foreach (FileFacts f in _entries.Values)
+        {
+            if (!f.Path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string rest = f.Path[prefix.Length..];
+            if (rest.Length == 0 || rest.Contains('\\', StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            result.Add(new DirectoryEntry(rest, f.IsDirectory, f.Attributes, f.Length, f.CreationTimeUtc, f.LastWriteTimeUtc));
+        }
+
+        return result;
+    }
+
     private static string Norm(string path)
     {
         if (!PathGuard.TryNormalize(path, out string normalized, out PathProblem problem))

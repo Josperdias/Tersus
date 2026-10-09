@@ -21,6 +21,15 @@ public enum ProbeError
 
 public readonly record struct VolumeSpace(long TotalBytes, long FreeBytes);
 
+/// <summary>One item of a directory listing (cheap data only: no handle was opened for it).</summary>
+public readonly record struct DirectoryEntry(
+    string Name,
+    bool IsDirectory,
+    FileAttributes Attributes,
+    long Length,
+    DateTime CreatedUtc,
+    DateTime ModifiedUtc);
+
 /// <summary>
 /// Everything the policy needs to know about one path, captured at one moment.
 /// "Deep" facts come from an open handle (identity, link count, final path); they are what the
@@ -80,4 +89,10 @@ public interface IFileSystem
     FileFacts TryHold(string path, out IDisposable? hold);
 
     VolumeSpace? GetVolumeSpace(string path);
+
+    /// <summary>
+    /// Lists the direct children of a directory (links are listed, never followed). Throws
+    /// <see cref="UnauthorizedAccessException"/> or <see cref="IOException"/> when the directory cannot be read.
+    /// </summary>
+    IEnumerable<DirectoryEntry> EnumerateDirectory(string path);
 }
