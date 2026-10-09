@@ -89,7 +89,8 @@ jobs:
         run: >
           dotnet publish Tersus.App/Tersus.App.csproj -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
-          -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o publish
+          -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false
+          -p:SourceRevisionId=${{ github.event.pull_request.head.sha || github.sha }} -o publish
 
       - name: Inspecionar o executável (conteúdo, tamanho, assinatura, SHA-256)
         shell: pwsh
@@ -114,7 +115,8 @@ jobs:
           if (-not (Test-Path -LiteralPath $iscc)) { choco install innosetup --no-progress -y }
           if (-not (Test-Path -LiteralPath $iscc)) { throw 'ISCC.exe não encontrado' }
           "iscc=$iscc" | Add-Content -Path $env:GITHUB_OUTPUT
-          $inno = (Get-Item -LiteralPath $iscc).VersionInfo.ProductVersion
+          $banner = (& $iscc '/?' 2>&1 | Out-String)
+          $inno = if ($banner -match 'Inno Setup\s+([0-9][0-9.]*)') { $Matches[1] } else { 'desconhecida' }
           "inno=$inno" | Add-Content -Path $env:GITHUB_OUTPUT
           "Inno Setup: $inno"
 
@@ -165,7 +167,7 @@ jobs:
           ./tools/ci/New-BuildReport.ps1
           -OutFile entrega/RELATORIO_DE_BUILD.md
           -Version ${{ steps.ver.outputs.version }}
-          -Commit ${{ github.sha }}
+          -Commit ${{ github.event.pull_request.head.sha || github.sha }}
           -RunUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           -InnoVersion "${{ steps.iscc.outputs.inno }}"
           -TestSummary resultados-testes-windows/resumo.md

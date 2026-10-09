@@ -118,7 +118,7 @@ if (Test-Path -LiteralPath $installedExe) {
         Start-Sleep -Milliseconds 300
     }
     $startClock.Stop()
-    Check 'o programa instalado abre normalmente (janela principal "Tersus")' ((-not $app.HasExited) -and $title -eq 'Tersus') ("título='$title'; janela visível após {0:N1} s (inclui a primeira extração do arquivo único)" -f $startClock.Elapsed.TotalSeconds)
+    Check 'o programa instalado abre normalmente (janela principal "Tersus")' ((-not $app.HasExited) -and $title -eq 'Tersus') ("título='$title'; janela visível após {0:N1} s" -f $startClock.Elapsed.TotalSeconds)
     Start-Sleep -Seconds 2
     Check 'o uso normal criou a pasta de dados e a de registros do Tersus' (Test-Path -LiteralPath (Join-Path $dataDir 'logs'))
     if (-not $app.HasExited) {

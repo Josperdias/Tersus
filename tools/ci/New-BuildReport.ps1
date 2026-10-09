@@ -85,3 +85,7 @@ Add ''
 [System.IO.File]::WriteAllText($OutFile, $sb.ToString(), (New-Object System.Text.UTF8Encoding($false)))
 if ($env:GITHUB_STEP_SUMMARY) { Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Relatório de build gerado: ``$([System.IO.Path]::GetFileName($OutFile))`` (no artefato do pacote)." }
 Write-Host "Relatório escrito em $OutFile"
+# The authoring sandbox cannot download artifacts, so the full report is also printed in the job log.
+Write-Host '===== RELATORIO_DE_BUILD.md ====='
+$sb.ToString() -split "`n" | ForEach-Object { Write-Host $_.TrimEnd() }
+Write-Host '===== fim ====='

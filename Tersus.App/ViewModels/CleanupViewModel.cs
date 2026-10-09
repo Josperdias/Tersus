@@ -126,6 +126,7 @@ public sealed class CleanupViewModel : ObservableObject, IPageActivated
     private string _reportHeadline = string.Empty;
     private string _reportDetail = string.Empty;
     private string _reportSpace = string.Empty;
+    private string _reportPreflight = string.Empty;
     private string? _reportWarning;
     private string? _logPath;
     private int _sortIndex;
@@ -277,6 +278,9 @@ public sealed class CleanupViewModel : ObservableObject, IPageActivated
     public string ReportDetail { get => _reportDetail; private set => Set(ref _reportDetail, value); }
 
     public string ReportSpace { get => _reportSpace; private set => Set(ref _reportSpace, value); }
+
+    /// <summary>What the Recycle Bin check did. It sends one tiny file of its own to the bin to prove the bin works; that file stays there.</summary>
+    public string ReportPreflight { get => _reportPreflight; private set => Set(ref _reportPreflight, value); }
 
     public string? ReportWarning
     {
@@ -707,6 +711,10 @@ public sealed class CleanupViewModel : ObservableObject, IPageActivated
             ? string.Create(c, $"Espaço livre medido no disco: antes {ByteSize.Format(before, c)}, depois {ByteSize.Format(after, c)}. {SafetyTexts.RecycleBinNote}")
             : SafetyTexts.RecycleBinNote;
 
+        ReportPreflight = string.IsNullOrWhiteSpace(report.PreflightMessage)
+            ? string.Empty
+            : report.PreflightMessage + " Esse arquivo de teste do Tersus (cerca de 100 bytes) fica na Lixeira e pode ser ignorado.";
+
         if (report.HasUnprovenDeletion)
         {
             ReportWarning = "ATENÇÃO: um arquivo saiu da pasta sem que a Lixeira confirmasse a chegada dele. Por precaução a operação foi interrompida. Abra a Lixeira do Windows e confira. " + (report.AbortReason ?? string.Empty);
@@ -751,6 +759,7 @@ public sealed class CleanupViewModel : ObservableObject, IPageActivated
         Results.Clear();
         _plan = null;
         _report = null;
+        ReportPreflight = string.Empty;
         SearchSummary = string.Empty;
         PlanHeadline = string.Empty;
         PlanDetail = string.Empty;

@@ -172,6 +172,8 @@
                             <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{Binding ReportHeadline}" />
                             <TextBlock Style="{StaticResource Body}" Margin="0,4,0,0" Text="{Binding ReportDetail}" />
                             <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="{Binding ReportSpace}" />
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="{Binding ReportPreflight}"
+                                       Visibility="{Binding ReportPreflight, Converter={StaticResource NullToVis}}" />
                             <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="{Binding LogPath, StringFormat='Registro desta limpeza: {0}'}"
                                        Visibility="{Binding HasLog, Converter={StaticResource BoolToVis}}" TextWrapping="Wrap" />
                             <WrapPanel Margin="0,12,0,0">
