@@ -114,7 +114,9 @@ jobs:
           if (-not (Test-Path -LiteralPath $iscc)) { choco install innosetup --no-progress -y }
           if (-not (Test-Path -LiteralPath $iscc)) { throw 'ISCC.exe não encontrado' }
           "iscc=$iscc" | Add-Content -Path $env:GITHUB_OUTPUT
-          "Inno Setup: $((Get-Item -LiteralPath $iscc).VersionInfo.ProductVersion)"
+          $inno = (Get-Item -LiteralPath $iscc).VersionInfo.ProductVersion
+          "inno=$inno" | Add-Content -Path $env:GITHUB_OUTPUT
+          "Inno Setup: $inno"
 
       - name: Gerar o instalador (por usuário, sem administrador)
         shell: pwsh
@@ -133,6 +135,12 @@ jobs:
           -ScanFolder $env:GITHUB_WORKSPACE
           -Version ${{ steps.ver.outputs.version }}
 
+      - name: Baixar o resumo dos testes (job do Windows)
+        uses: actions/download-artifact@v4
+        with:
+          name: resultados-testes-windows
+          path: resultados-testes-windows
+
       - name: SHA-256 dos entregáveis
         shell: pwsh
         run: |
@@ -150,6 +158,20 @@ jobs:
           Get-Content entrega/SHA256SUMS.txt | Add-Content -Path $env:GITHUB_STEP_SUMMARY
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value 'O executável e o instalador **não são assinados digitalmente**; confira o SHA-256 acima.'
+
+      - name: Relatório de build (gerado pela própria pipeline)
+        shell: pwsh
+        run: >
+          ./tools/ci/New-BuildReport.ps1
+          -OutFile entrega/RELATORIO_DE_BUILD.md
+          -Version ${{ steps.ver.outputs.version }}
+          -Commit ${{ github.sha }}
+          -RunUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          -InnoVersion "${{ steps.iscc.outputs.inno }}"
+          -TestSummary resultados-testes-windows/resumo.md
+          -SmokeDir evidencias
+          -InstallerDir evidencias/instalador
+          -SumsFile entrega/SHA256SUMS.txt
 
       - name: Publicar o executável e o instalador
         uses: actions/upload-artifact@v4
