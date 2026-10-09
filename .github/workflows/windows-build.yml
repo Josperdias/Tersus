@@ -7,6 +7,14 @@ on:
         description: 'Publicar as capturas de tela e os relatórios na branch "evidencias" (para ver no navegador, sem baixar o ZIP)'
         type: boolean
         default: false
+      publicar_release:
+        description: 'Criar a página de download (GitHub Release) com o instalador, o EXE, os SHA-256 e as notas. Só funciona na branch main'
+        type: boolean
+        default: false
+      release_rascunho:
+        description: 'Criar o release como RASCUNHO (só quem tem acesso de escrita vê, até clicar em Publish release). Desmarque para publicar na hora'
+        type: boolean
+        default: true
   push:
     branches: [main]
     tags: ['v*']
@@ -65,6 +73,8 @@ jobs:
     needs: [tests-windows, tests-linux]
     runs-on: windows-latest
     timeout-minutes: 60
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
@@ -243,3 +253,73 @@ jobs:
           git add -A
           git commit -q -m "Evidências da execução ${GITHUB_RUN_ID} do commit ${GITHUB_SHA}"
           git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/evidencias
+
+  publicar-release:
+    name: Criar a página de download (GitHub Release) - opcional, só execução manual na main
+    # Opt-in, like the screenshots job. It publishes exactly what THIS run built, smoke-tested and install-tested. Only from main (the tag must point
+    # at a commit that is on main), only on manual dispatch, and it never overwrites a release that is already published.
+    if: ${{ !cancelled() && needs.build-windows.result == 'success' && github.event_name == 'workflow_dispatch' && inputs.publicar_release && github.ref == 'refs/heads/main' }}
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Baixar o pacote validado desta execução
+        uses: actions/download-artifact@v4
+        with:
+          name: Tersus-${{ needs.build-windows.outputs.version }}-win-x64
+          path: entrega
+
+      - name: Notas da versão (texto da página de download)
+        shell: pwsh
+        run: >
+          ./tools/ci/New-ReleaseNotes.ps1
+          -OutFile notas.md
+          -Version ${{ needs.build-windows.outputs.version }}
+          -Commit ${{ github.sha }}
+          -RunUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          -Repo ${{ github.repository }}
+          -SumsFile entrega/SHA256SUMS.txt
+
+      - name: Criar o release (pré-lançamento; rascunho por padrão)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-windows.outputs.version }}
+          RASCUNHO: ${{ inputs.release_rascunho }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "v$($env:VERSION)"
+          $repo = $env:GITHUB_REPOSITORY
+          $assets = @(
+            "entrega/Tersus-Setup-$($env:VERSION)-x64.exe",
+            'entrega/Tersus.exe',
+            'entrega/SHA256SUMS.txt',
+            'entrega/RELATORIO_DE_BUILD.md'
+          )
+          foreach ($a in $assets) { if (-not (Test-Path -LiteralPath $a)) { throw "Arquivo ausente no pacote desta execução: $a" } }
+
+          # A release people may already have downloaded is never overwritten; a leftover DRAFT with the same tag is safe to replace.
+          $json = gh api "repos/$repo/releases?per_page=100"
+          if ($LASTEXITCODE -ne 0) { throw 'Não foi possível listar os releases existentes.' }
+          $same = @(($json | ConvertFrom-Json) | Where-Object { $_.tag_name -eq $tag })
+          foreach ($r in $same) {
+            if (-not $r.draft) { throw "Já existe um release PUBLICADO para $tag. Ele não será sobrescrito: aumente a versão em Directory.Build.props ou apague o release manualmente." }
+          }
+          foreach ($r in $same) {
+            gh api -X DELETE "repos/$repo/releases/$($r.id)" | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "Não foi possível substituir o rascunho anterior ($($r.id))." }
+          }
+
+          # Pre-release while the program is unsigned and only VM-tested (remove --prerelease after code signing, decision D2).
+          $flags = @('--prerelease')
+          if ($env:RASCUNHO -eq 'true') { $flags += '--draft' }
+          gh release create $tag @assets --repo $repo --target $env:GITHUB_SHA --title "Tersus $($env:VERSION) (candidata, não assinada)" --notes-file notas.md @flags
+          if ($LASTEXITCODE -ne 0) { throw "gh release create falhou (código $LASTEXITCODE)." }
+
+          $estado = if ($env:RASCUNHO -eq 'true') { 'RASCUNHO (só você vê; abra Releases e clique em Publish release)' } else { 'PUBLICADO como pré-lançamento' }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Página de download: $tag"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Estado: **$estado**. Veja em https://github.com/$repo/releases"

@@ -29,12 +29,17 @@ Mover para a Lixeira **não libera espaço** até você esvaziá-la.
 
 ## Baixar
 
-Cada execução da CI publica, em *Actions → Artifacts* (guardado por 90 dias), o pacote `Tersus-<versão>-win-x64` com:
+**Página de download: [Releases](https://github.com/Josperdias/Tersus/releases)** — instalador, versão portátil, SHA-256 e relatório de testes de cada versão.
+Passo a passo (conferir o arquivo, aviso do SmartScreen, instalar, desinstalar): [`docs/BAIXAR_E_INSTALAR.md`](docs/BAIXAR_E_INSTALAR.md).
 
-- `Tersus.exe` — autossuficiente, arquivo único (não precisa instalar o .NET);
-- `Tersus-Setup-<versão>-x64.exe` — instalador por usuário (sem administrador, sem inicialização automática);
+Cada versão traz:
+
+- `Tersus-Setup-<versão>-x64.exe` — **instalador** por usuário (sem administrador, sem inicialização automática);
+- `Tersus.exe` — versão **portátil**, autossuficiente, arquivo único (não precisa instalar o .NET);
 - `SHA256SUMS.txt` — confira antes de usar. **Os arquivos não são assinados digitalmente**; o Windows pode mostrar um aviso do SmartScreen;
 - `RELATORIO_DE_BUILD.md` — gerado pela própria pipeline, com os números medidos nessa execução (veja também [`docs/RELATORIO_DE_VALIDACAO.md`](docs/RELATORIO_DE_VALIDACAO.md)).
+
+A página de Releases é criada por um workflow manual (rascunho por padrão; ver o guia). Além disso, cada execução da CI guarda o mesmo pacote em *Actions → Artifacts* por 90 dias.
 
 ## Compilar e testar
 
@@ -61,6 +66,7 @@ docs/           origem, escopo, segurança, testes, pendências
 
 ## Documentação
 
+- [`docs/BAIXAR_E_INSTALAR.md`](docs/BAIXAR_E_INSTALAR.md) — onde baixar, como conferir, instalar, atualizar e desinstalar; como a página de download é criada
 - [`docs/SEGURANCA.md`](docs/SEGURANCA.md) — travas, modelo de ameaças, o que **não** foi validado
 - [`docs/TESTES.md`](docs/TESTES.md) — o que cada teste prova e como a CI valida o EXE e o instalador
 - [`docs/RELATORIO_DE_VALIDACAO.md`](docs/RELATORIO_DE_VALIDACAO.md) — resultados reais, medições, defeitos achados e corrigidos

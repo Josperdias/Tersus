@@ -21,5 +21,8 @@ Reconstrução a partir da especificação do 0.2.0 (ver `docs/ORIGEM_E_LIMITACO
 ### Defeitos encontrados pela validação e corrigidos
 Ver a tabela completa em `docs/RELATORIO_DE_VALIDACAO.md`. Em resumo: duas brechas da política achadas pelo fuzz (links = 0; atributo de pasta), um conflito de chave de recurso (`WarnButton`) que só aparece com a interface rodando, falhas dos próprios roteiros de teste (modo estrito, unidades diferentes, arquivo em uso), um passo do instalador e, na leitura das capturas de tela, defeitos de layout que os testes automáticos não enxergavam (coluna de tamanho ilegível, tela que colapsava com zoom de 140 %, caixa de confirmação abaixo da dobra em tela de 768 px).
 
+### Página de download
+- Workflow manual `publicar_release`: cria o GitHub Release (pré-lançamento, rascunho por padrão) com o instalador, o EXE portátil, `SHA256SUMS.txt`, o relatório de build e notas em português com o passo a passo e os avisos (não assinado; só testado em VM). Guia: `docs/BAIXAR_E_INSTALAR.md`.
+
 ### Pipeline (GitHub Actions, Windows)
 - Testes de Core, auditoria e integração em Windows real; build com `-warnaserror`; publicação; teste de fumaça da interface real com verificação independente da Lixeira; instalação, uso e desinstalação silenciosas; SHA-256 e artefatos.

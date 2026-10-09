@@ -8,7 +8,7 @@ Tudo abaixo é **honesto e deliberado**: são coisas que não foram feitas, não
 |---|---|---|
 | D1 | Confirmar o **nome do detentor dos direitos** na licença MIT | está como “Tersus contributors” |
 | D2 | **Assinatura de código** (certificado) para o EXE e o instalador | hoje não são assinados e não têm reputação no SmartScreen; o Windows pode avisar |
-| D3 | **Autorizar** (ou não) a publicação de um release no GitHub | nenhum release público foi criado; os binários estão como *artefatos* da CI |
+| D3 | **Publicar** o release no GitHub | o mecanismo está pronto (workflow manual `publicar_release`, que cria o release como **rascunho** e pré-lançamento, com o aviso de “não assinado”); falta você revisar e clicar em *Publish release*. Como o repositório é **público**, publicar torna o instalador baixável por qualquer pessoa |
 | D4 | Teste em **máquina física** Windows 10 e Windows 11, de preferência primeiro numa VM local | só máquinas virtuais descartáveis da CI foram usadas |
 | D5 | Fornecer o **ZIP original do 0.2.0** em disco para reconciliação | ver `ORIGEM_E_LIMITACOES.md` |
 | D6 | Decidir se o Tersus pode **iniciar o desinstalador oficial** de um programa a partir da lista | hoje só abre *Aplicativos instalados* do Windows |

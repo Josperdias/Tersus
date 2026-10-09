@@ -53,4 +53,10 @@ As capturas e os registros são gerados com arquivos **artificiais**; não há d
 
 Para **ver as capturas no navegador**, sem baixar o ZIP: em *Actions → Tersus - Testes, EXE e instalador (Windows) → Run workflow*, marque `publicar_capturas`.
 No fim da execução a CI recria a branch `evidencias` (um único commit, sobrescrito a cada vez; pode ser apagada) com as capturas e os relatórios.
-Esse é o **único** job da pipeline com permissão de escrita no repositório e ele só roda nessa execução manual; builds comuns (pull request e push) nunca gravam nada no repositório.
+Esse job e o da página de download (abaixo) são os **únicos** da pipeline com permissão de escrita no repositório, e só rodam em execução manual; builds comuns (pull request e push) nunca gravam nada no repositório.
+
+## Página de download (GitHub Release)
+
+Em *Actions → Run workflow*, na branch `main`, marque `publicar_release`. O job `publicar-release` baixa o pacote **desta mesma execução** (o que foi compilado, testado, instalado e desinstalado),
+gera as notas com `tools/ci/New-ReleaseNotes.ps1` (versão, commit, execução e SHA-256 lidos da pipeline) e cria o release `v<versão>` como **pré-lançamento**, em **rascunho** por padrão (`release_rascunho`).
+Ele não roda fora da `main`, não precisa de nenhum secret e **nunca sobrescreve** um release já publicado. Passo a passo para quem mantém: [`BAIXAR_E_INSTALAR.md`](BAIXAR_E_INSTALAR.md).
