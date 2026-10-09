@@ -1,0 +1,70 @@
+<Window x:Class="Tersus.App.Views.RecycleConfirmWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Tersus — Confirmar envio à Lixeira"
+        Width="720" SizeToContent="Height" MaxHeight="780" MinWidth="560"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{DynamicResource PageBg}" FontFamily="{StaticResource UiFont}"
+        AutomationProperties.Name="Confirmação para enviar arquivos temporários à Lixeira">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Style="{StaticResource PageTitle}" Text="Confirmar envio à Lixeira" />
+
+        <Border Grid.Row="1" Style="{StaticResource BannerWarn}" Margin="0,8,0,12">
+            <TextBlock x:Name="HeadlineText" Style="{StaticResource Body}" FontWeight="SemiBold" FontSize="15"
+                       AutomationProperties.Name="Resumo do que será enviado à Lixeira" />
+        </Border>
+
+        <StackPanel Grid.Row="2">
+            <TextBlock x:Name="FactNotPermanent" Style="{StaticResource BulletText}" />
+            <TextBlock x:Name="FactNoSpace" Style="{StaticResource BulletText}" />
+            <TextBlock x:Name="FactRevalidate" Style="{StaticResource BulletText}" />
+            <TextBlock x:Name="FactRules" Style="{StaticResource BulletText}" />
+        </StackPanel>
+
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,12,0,12" Padding="10">
+            <StackPanel>
+                <TextBlock Text="Primeiros arquivos da lista" Style="{StaticResource Muted}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto" Focusable="False">
+                    <ItemsControl x:Name="PreviewList" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Path}" Style="{StaticResource Body}" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Detail}" Style="{StaticResource Muted}" Margin="12,0,0,0" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBlock x:Name="MoreText" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            </StackPanel>
+        </Border>
+
+        <CheckBox Grid.Row="4" x:Name="AckBox" Margin="0,0,0,16"
+                  AutomationProperties.Name="Confirmo que entendi que os arquivos serão enviados à Lixeira do Windows">
+            <TextBlock Style="{StaticResource Body}"
+                       Text="Entendi: estes arquivos serão enviados à Lixeira do Windows e eu posso restaurá-los de lá." />
+        </CheckBox>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Style="{StaticResource SecondaryButton}" Content="Cancelar (nada será alterado)"
+                    IsDefault="True" IsCancel="True" Click="OnCancel" />
+            <Button x:Name="ConfirmButton" Style="{StaticResource WarnButton}" Content="Mover para a Lixeira" Margin="0"
+                    IsEnabled="{Binding IsChecked, ElementName=AckBox}" Click="OnConfirm"
+                    AutomationProperties.HelpText="Só habilita depois de marcar a caixa de confirmação" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tersus.Core", "Tersus.Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tersus.Tests", "Tersus.Tests\Tersus.Tests.csproj", "{11485D95-8F22-47C7-A7DF-3BC9BA0565C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tersus.App", "Tersus.App\Tersus.App.csproj", "{523CD352-953E-4A57-B053-B88B0CB67B24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{11485D95-8F22-47C7-A7DF-3BC9BA0565C4}.Release|x64.Build.0 = Release|Any CPU
 		{11485D95-8F22-47C7-A7DF-3BC9BA0565C4}.Release|x86.ActiveCfg = Release|Any CPU
 		{11485D95-8F22-47C7-A7DF-3BC9BA0565C4}.Release|x86.Build.0 = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|x64.Build.0 = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Debug|x86.Build.0 = Debug|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|x64.ActiveCfg = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|x64.Build.0 = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|x86.ActiveCfg = Release|Any CPU
+		{523CD352-953E-4A57-B053-B88B0CB67B24}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

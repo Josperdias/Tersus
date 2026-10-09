@@ -1,0 +1,45 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Palette: keeps the original v0.2.0 colours (PageBg, Navy, Azure) and adds the rest. All text colours meet WCAG AA on their backgrounds. -->
+    <Color x:Key="PageBgColor">#F4F7FB</Color>
+    <Color x:Key="NavyColor">#142943</Color>
+    <Color x:Key="AzureColor">#2265D1</Color>
+    <SolidColorBrush x:Key="PageBg" Color="{StaticResource PageBgColor}" />
+    <SolidColorBrush x:Key="Navy" Color="{StaticResource NavyColor}" />
+    <SolidColorBrush x:Key="Azure" Color="{StaticResource AzureColor}" />
+    <SolidColorBrush x:Key="AzureDark" Color="#1B52AB" />
+    <SolidColorBrush x:Key="CardBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardBorder" Color="#D5DEEB" />
+    <SolidColorBrush x:Key="TextBody" Color="#2B3A4F" />
+    <SolidColorBrush x:Key="TextMuted" Color="#556579" />
+    <SolidColorBrush x:Key="RowHover" Color="#EEF3FB" />
+    <SolidColorBrush x:Key="RowSelected" Color="#DCE8FA" />
+    <SolidColorBrush x:Key="DisabledBg" Color="#C9D2DF" />
+    <SolidColorBrush x:Key="DisabledFg" Color="#566274" />
+    <SolidColorBrush x:Key="RiskProtected" Color="#B3261E" />
+    <SolidColorBrush x:Key="RiskCaution" Color="#9A4A06" />
+    <SolidColorBrush x:Key="RiskLow" Color="#2E7D32" />
+    <SolidColorBrush x:Key="RiskInfo" Color="#44546A" />
+    <SolidColorBrush x:Key="Accent" Color="#0F7B5F" />
+    <SolidColorBrush x:Key="WarnButton" Color="#9A4A06" />
+    <SolidColorBrush x:Key="WarnButtonHover" Color="#7C3B05" />
+    <SolidColorBrush x:Key="NavBg" Color="#142943" />
+    <SolidColorBrush x:Key="NavHover" Color="#1E3A5F" />
+    <SolidColorBrush x:Key="NavSelected" Color="#2265D1" />
+    <SolidColorBrush x:Key="OnAzure" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="OnNav" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="DisabledSoft" Color="#EEF1F6" />
+    <SolidColorBrush x:Key="HeaderBg" Color="#EAF0F9" />
+    <SolidColorBrush x:Key="GridLine" Color="#E7EDF6" />
+    <SolidColorBrush x:Key="TrackBg" Color="#E3EAF5" />
+    <SolidColorBrush x:Key="BannerWarnBg" Color="#FFF4E5" />
+    <SolidColorBrush x:Key="BannerWarnBorder" Color="#E0A15A" />
+    <SolidColorBrush x:Key="BannerDangerBg" Color="#FDECEA" />
+    <SolidColorBrush x:Key="BannerDangerBorder" Color="#D9534F" />
+    <SolidColorBrush x:Key="BannerInfoBg" Color="#EAF2FF" />
+    <SolidColorBrush x:Key="BannerInfoBorder" Color="#9DB9E8" />
+    <SolidColorBrush x:Key="BannerOkBg" Color="#E8F5EE" />
+    <SolidColorBrush x:Key="BannerOkBorder" Color="#7CB892" />
+    <SolidColorBrush x:Key="OnStrong" Color="#FFFFFF" />
+</ResourceDictionary>

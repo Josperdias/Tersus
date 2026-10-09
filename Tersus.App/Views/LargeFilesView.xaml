@@ -1,0 +1,86 @@
+<UserControl x:Class="Tersus.App.Views.LargeFilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="28,24,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Style="{StaticResource PageTitle}" Text="Maiores arquivos" />
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,12"
+                       Text="Os maiores arquivos da última análise, explicados. O Tersus não apaga arquivos daqui: use “Mostrar no Explorador” para decidir com calma." />
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource Card}" VerticalAlignment="Top"
+                Visibility="{Binding HasScan, Converter={StaticResource NotBoolToVis}}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Ainda não há uma análise" />
+                <TextBlock Style="{StaticResource Body}" Text="Faça uma análise em “Início” para listar os maiores arquivos." />
+                <Button Content="Ir para Início" Command="{Binding GoHomeCommand}" Margin="0,12,0,0" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Visibility="{Binding HasScan, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="390" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0" Margin="0,0,16,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                    <TextBox Width="240" Margin="0,0,10,6" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             AutomationProperties.Name="Filtrar por parte do caminho" ToolTip="Filtrar por parte do caminho" />
+                    <ComboBox Width="220" Margin="0,0,10,6" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                              AutomationProperties.Name="Tipo de arquivo" />
+                    <ComboBox Width="170" Margin="0,0,10,6" ItemsSource="{Binding MinSizeLabels}" SelectedIndex="{Binding MinSizeIndex, Mode=TwoWay}"
+                              AutomationProperties.Name="Tamanho mínimo" />
+                </WrapPanel>
+
+                <DataGrid Grid.Row="1" ItemsSource="{Binding View}" SelectedItem="{Binding Selected, Mode=TwoWay}"
+                          AutomationProperties.Name="Maiores arquivos" EnableRowVirtualization="True" CanUserSortColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Arquivo" Binding="{Binding Name}" Width="200" SortMemberPath="Name" />
+                        <DataGridTextColumn Header="Tamanho" Binding="{Binding Bytes, Converter={StaticResource BytesText}}" Width="90" SortMemberPath="Bytes" />
+                        <DataGridTextColumn Header="Tipo" Binding="{Binding CategoryLabel}" Width="150" SortMemberPath="CategoryLabel" />
+                        <DataGridTextColumn Header="Modificado" Binding="{Binding Modified, StringFormat=dd/MM/yyyy}" Width="95" SortMemberPath="Modified" />
+                        <DataGridTextColumn Header="Pasta" Binding="{Binding Folder}" Width="*" SortMemberPath="Folder" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Grid.Row="2" Text="{Binding Summary}" Style="{StaticResource Muted}" Margin="0,8,0,0" />
+            </Grid>
+
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Focusable="False">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Visibility="{Binding Selected, Converter={StaticResource NullToVis}, ConverterParameter=invert}">
+                        <TextBlock Style="{StaticResource Body}" Text="Selecione um arquivo na lista para ver o que ele é." />
+                    </Border>
+                    <StackPanel Visibility="{Binding Selected, Converter={StaticResource NullToVis}}">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Muted}" Text="Caminho completo" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Selected.Entry.Path, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
+                                         AutomationProperties.Name="Caminho completo do arquivo selecionado" />
+                                <TextBlock Text="{Binding AllocatedText}" Style="{StaticResource Muted}" Margin="0,6,0,0"
+                                           Visibility="{Binding AllocatedText, Converter={StaticResource NullToVis}}" />
+                            </StackPanel>
+                        </Border>
+                        <ContentControl Content="{Binding Explanation}" Focusable="False" IsTabStop="False" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Style="{StaticResource SecondaryButton}" Content="Mostrar no Explorador" Command="{Binding ExplorerCommand}" />
+                            <Button Style="{StaticResource SecondaryButton}" Content="Copiar caminho" Command="{Binding CopyPathCommand}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

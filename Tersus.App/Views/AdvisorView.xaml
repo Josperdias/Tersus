@@ -1,0 +1,45 @@
+<UserControl x:Class="Tersus.App.Views.AdvisorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,24,28,28" MaxWidth="1000" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource PageTitle}" Text="Recomendações" />
+            <Border Style="{StaticResource BannerInfo}" Margin="0,4,0,14">
+                <TextBlock Style="{StaticResource Body}"
+                           Text="Só orientação. O Tersus explica o que ocupa espaço no seu Windows e como você mesmo pode agir; ele não altera nenhuma destas configurações." />
+            </Border>
+
+            <WrapPanel Margin="0,0,0,10">
+                <Button Style="{StaticResource SecondaryButton}" Content="Verificar de novo" Command="{Binding RefreshCommand}" />
+                <Button Style="{StaticResource SecondaryButton}" Content="Abrir a Lixeira" Command="{Binding OpenRecycleBinCommand}" />
+                <Button Style="{StaticResource SecondaryButton}" Content="Abrir “Aplicativos instalados”" Command="{Binding OpenSettingsCommand}" />
+            </WrapPanel>
+            <ProgressBar IsIndeterminate="True" Margin="0,0,0,10" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,0,0,10" />
+
+            <ItemsControl ItemsSource="{Binding Items}" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <Border Style="{StaticResource Badge}" Background="{Binding Severity, Converter={StaticResource SeverityBrush}}" Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding SeverityText}" Foreground="{DynamicResource OnStrong}" FontWeight="SemiBold" FontSize="12" />
+                                </Border>
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="{Binding Detail}" Style="{StaticResource Body}" />
+                                <TextBlock Text="{Binding Evidence}" Style="{StaticResource Muted}" Margin="0,6,0,0" FontStyle="Italic"
+                                           Visibility="{Binding Evidence, Converter={StaticResource NullToVis}}" />
+                                <TextBlock Text="Como fazer, se você quiser" Style="{StaticResource Muted}" FontWeight="SemiBold" Margin="0,8,0,0"
+                                           Visibility="{Binding HowTo, Converter={StaticResource NullToVis}}" />
+                                <TextBlock Text="{Binding HowTo}" Style="{StaticResource Body}"
+                                           Visibility="{Binding HowTo, Converter={StaticResource NullToVis}}" />
+                                <TextBlock Text="{Binding Caution, StringFormat='Cuidado: {0}'}" Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,8,0,0"
+                                           Visibility="{Binding Caution, Converter={StaticResource NullToVis}}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
