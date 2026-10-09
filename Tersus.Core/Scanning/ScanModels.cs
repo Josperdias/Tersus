@@ -6,10 +6,11 @@ public sealed record ScanOptions
     public int LargestFilesCount { get; init; } = 300;
 
     /// <summary>
-    /// Directory-listing threads. Listing is bound by I/O latency (a cold or network-backed disk answers one request at a time), so a few more
-    /// workers than cores keep it busy; they run at below-normal priority so the PC stays responsive, and the cap of 8 avoids thrashing a spinning disk.
+    /// Directory-listing threads. Kept modest so a spinning disk is not thrashed and the PC stays responsive. Measured on a cold virtual disk
+    /// (170k files in C:\Windows): 2 workers took 48.8 s and 4 workers 48.9 s, so more threads were not worth their cost; the second, warm pass
+    /// takes 1.4 s. The cold-disk time there is limited by the disk, not by the number of listing threads.
     /// </summary>
-    public int MaxDegreeOfParallelism { get; init; } = Math.Clamp(Environment.ProcessorCount, 4, 8);
+    public int MaxDegreeOfParallelism { get; init; } = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
 
     /// <summary>Upper bound for folder nodes kept in memory; smaller folders are folded into their parent's "other".</summary>
     public int MaxRetainedNodes { get; init; } = 100_000;

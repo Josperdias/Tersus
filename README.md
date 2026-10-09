@@ -29,11 +29,12 @@ Mover para a Lixeira **não libera espaço** até você esvaziá-la.
 
 ## Baixar
 
-Cada execução da CI publica, em *Actions → Artifacts*, o pacote `Tersus-<versão>-win-x64` com:
+Cada execução da CI publica, em *Actions → Artifacts* (guardado por 90 dias), o pacote `Tersus-<versão>-win-x64` com:
 
 - `Tersus.exe` — autossuficiente, arquivo único (não precisa instalar o .NET);
 - `Tersus-Setup-<versão>-x64.exe` — instalador por usuário (sem administrador, sem inicialização automática);
-- `SHA256SUMS.txt` — confira antes de usar. **Os arquivos não são assinados digitalmente**; o Windows pode mostrar um aviso do SmartScreen.
+- `SHA256SUMS.txt` — confira antes de usar. **Os arquivos não são assinados digitalmente**; o Windows pode mostrar um aviso do SmartScreen;
+- `RELATORIO_DE_BUILD.md` — gerado pela própria pipeline, com os números medidos nessa execução (veja também [`docs/RELATORIO_DE_VALIDACAO.md`](docs/RELATORIO_DE_VALIDACAO.md)).
 
 ## Compilar e testar
 
@@ -62,6 +63,7 @@ docs/           origem, escopo, segurança, testes, pendências
 
 - [`docs/SEGURANCA.md`](docs/SEGURANCA.md) — travas, modelo de ameaças, o que **não** foi validado
 - [`docs/TESTES.md`](docs/TESTES.md) — o que cada teste prova e como a CI valida o EXE e o instalador
+- [`docs/RELATORIO_DE_VALIDACAO.md`](docs/RELATORIO_DE_VALIDACAO.md) — resultados reais, medições, defeitos achados e corrigidos
 - [`docs/ESCOPO.md`](docs/ESCOPO.md) — escopo entregue × documentos do produto
 - [`docs/PENDENCIAS.md`](docs/PENDENCIAS.md) — o que falta e decisões que dependem do dono
 - [`docs/ORIGEM_E_LIMITACOES.md`](docs/ORIGEM_E_LIMITACOES.md) — de onde veio o código (inclui a limitação sobre o ZIP original)

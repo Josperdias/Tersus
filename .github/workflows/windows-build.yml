@@ -182,7 +182,7 @@ jobs:
           name: Tersus-${{ steps.ver.outputs.version }}-win-x64
           path: entrega/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
 
       - name: Publicar as evidências (capturas de tela, relatórios, registros)
         if: always()

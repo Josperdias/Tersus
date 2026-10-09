@@ -17,5 +17,8 @@ Reconstrução a partir da especificação do 0.2.0 (ver `docs/ORIGEM_E_LIMITACO
 - Acessibilidade: teclado, atalhos Ctrl+1..9, zoom, cor nunca é o único sinal, paleta de alto contraste.
 - Instalador por usuário (Inno Setup 6) e EXE autossuficiente de arquivo único.
 
+### Defeitos encontrados pela validação e corrigidos
+Ver a tabela completa em `docs/RELATORIO_DE_VALIDACAO.md`. Em resumo: duas brechas da política achadas pelo fuzz (links = 0; atributo de pasta), um conflito de chave de recurso (`WarnButton`) que só aparece com a interface rodando, falhas dos próprios roteiros de teste (modo estrito, unidades diferentes, arquivo em uso) e um passo do instalador.
+
 ### Pipeline (GitHub Actions, Windows)
 - Testes de Core, auditoria e integração em Windows real; build com `-warnaserror`; publicação; teste de fumaça da interface real com verificação independente da Lixeira; instalação, uso e desinstalação silenciosas; SHA-256 e artefatos.
