@@ -29,6 +29,14 @@ public sealed class AppDataFiles(AppPaths paths)
         }
     }
 
+    /// <summary>Appends one line to a log file inside the data folder.</summary>
+    public void AppendLine(string path, string line)
+    {
+        EnsureInsideDataDirectory(path);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.AppendAllText(path, line + Environment.NewLine, new UTF8Encoding(false));
+    }
+
     /// <summary>Moves a corrupted file aside (never deletes the evidence).</summary>
     public string? QuarantineCorrupt(string path)
     {
@@ -38,9 +46,23 @@ public sealed class AppDataFiles(AppPaths paths)
             return null;
         }
 
-        string target = path + ".corrompido-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture);
-        File.Move(path, target, overwrite: true);
+        string target = path + ".corrompido-"
+            + DateTime.UtcNow.ToString("yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture)
+            + "-" + Guid.NewGuid().ToString("N")[..6];
+        File.Move(path, target, overwrite: false);
+        TrimQuarantine(path, keep: 5);
         return target;
+    }
+
+    /// <summary>Keeps the newest few moved-aside copies of a damaged file so they cannot pile up forever.</summary>
+    private void TrimQuarantine(string originalPath, int keep)
+    {
+        string dir = Path.GetDirectoryName(Path.GetFullPath(originalPath))!;
+        string pattern = Path.GetFileName(originalPath) + ".corrompido-*";
+        foreach (FileInfo old in new DirectoryInfo(dir).EnumerateFiles(pattern).OrderByDescending(f => f.Name, StringComparer.Ordinal).Skip(keep).ToList())
+        {
+            TryDeleteOwnFile(old.FullName);
+        }
     }
 
     public bool TryDeleteOwnFile(string path)

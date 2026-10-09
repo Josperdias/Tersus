@@ -52,24 +52,3 @@ public sealed class NullCleanupLog : ICleanupLog
     {
     }
 }
-
-public sealed class FileCleanupLog : ICleanupLog
-{
-    private readonly object _gate = new();
-
-    public FileCleanupLog(string path)
-    {
-        Path = path;
-        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
-    }
-
-    public string? Path { get; }
-
-    public void Append(string line)
-    {
-        lock (_gate)
-        {
-            File.AppendAllText(Path!, line + Environment.NewLine, new System.Text.UTF8Encoding(false));
-        }
-    }
-}
