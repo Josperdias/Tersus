@@ -2,6 +2,11 @@ name: Tersus - Testes, EXE e instalador (Windows)
 
 on:
   workflow_dispatch:
+    inputs:
+      publicar_capturas:
+        description: 'Publicar as capturas de tela e os relatórios na branch "evidencias" (para ver no navegador, sem baixar o ZIP)'
+        type: boolean
+        default: false
   push:
     branches: [main]
     tags: ['v*']
@@ -208,3 +213,33 @@ jobs:
         if: always()
         run: |
           if [ -f test-results/resumo.md ]; then cat test-results/resumo.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+  publicar-capturas:
+    name: Publicar capturas e relatórios na branch "evidencias" (opcional, só execução manual)
+    # Opt-in. This is the ONLY job with write access to the repository, and it never runs for pull requests or pushes.
+    if: ${{ !cancelled() && needs.build-windows.result != 'skipped' && github.event_name == 'workflow_dispatch' && inputs.publicar_capturas }}
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Baixar as evidências
+        uses: actions/download-artifact@v4
+        with:
+          name: evidencias-interface-e-instalador
+          path: evidencias
+
+      - name: Enviar para a branch "evidencias" (um único commit, sobrescrito a cada vez)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd evidencias
+          printf 'Evidências da execução %s do commit %s.\nGerado automaticamente pela CI; esta branch pode ser apagada.\n' "$GITHUB_RUN_ID" "$GITHUB_SHA" > LEIA-ME.txt
+          git init -q -b evidencias
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "Evidências da execução ${GITHUB_RUN_ID} do commit ${GITHUB_SHA}"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/evidencias

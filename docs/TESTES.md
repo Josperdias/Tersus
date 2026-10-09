@@ -50,3 +50,7 @@ desinstalação silenciosa → confere que tudo foi removido e que a pasta de da
 | `evidencias-interface-e-instalador` | capturas de tela, `smoke-report.md`, `verificacao-independente.md`, `verificacao-instalador.md`, registros do instalador |
 
 As capturas e os registros são gerados com arquivos **artificiais**; não há dados pessoais.
+
+Para **ver as capturas no navegador**, sem baixar o ZIP: em *Actions → Tersus - Testes, EXE e instalador (Windows) → Run workflow*, marque `publicar_capturas`.
+No fim da execução a CI recria a branch `evidencias` (um único commit, sobrescrito a cada vez; pode ser apagada) com as capturas e os relatórios.
+Esse é o **único** job da pipeline com permissão de escrita no repositório e ele só roda nessa execução manual; builds comuns (pull request e push) nunca gravam nada no repositório.

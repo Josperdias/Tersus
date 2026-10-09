@@ -1,8 +1,9 @@
 # Relatório de validação do Tersus 0.3.0
 
 Registro **honesto e verificável** do que foi testado, do que falhou pelo caminho, de como cada defeito foi corrigido e do que **não** foi provado.
-Os números abaixo vêm da execução da pipeline em [`actions/runs/37968779505`](https://github.com/Josperdias/Tersus/actions/runs/37968779505)
-(commit `382692f`, PR #1). O relatório gerado pela própria pipeline (`RELATORIO_DE_BUILD.md`) acompanha o pacote de artefatos.
+Os números abaixo vêm da execução de referência da pipeline, [`actions/runs/37969649699`](https://github.com/Josperdias/Tersus/actions/runs/37969649699)
+(commit `48f2f4a`, PR #1). Cada execução gera o seu próprio relatório (`RELATORIO_DE_BUILD.md`, dentro do pacote de artefatos); os valores variam um pouco
+de uma execução para outra (as máquinas virtuais são compartilhadas) e os hashes mudam a cada commit.
 
 > **Ambiente:** máquinas virtuais descartáveis do GitHub Actions (`windows-latest`, Windows Server 2025, build 10.0.26100, .NET SDK 10.0.401, Inno Setup 6.7.1).
 > **Não** foi usada máquina física, nem Windows 10, nem leitor de tela, nem reinicialização. O EXE e o instalador **não são assinados**.
@@ -12,25 +13,26 @@ Os números abaixo vêm da execução da pipeline em [`actions/runs/37968779505`
 | Item | Resultado |
 |---|---|
 | Build da solução inteira, `-warnaserror` | 0 avisos, 0 erros |
-| Testes automatizados no Windows | **215 no total: 214 aprovados, 0 falhas, 1 ignorado** (44,9 s) |
+| Testes automatizados no Windows | **215 no total: 214 aprovados, 0 falhas, 1 ignorado** (44,3 s) |
 | Testes portáteis no Linux | verde |
 | Auditoria estática de segurança (12 testes) | verde, inclusive com os testes de mutação do próprio auditor |
-| `Tersus.exe` (win-x64, autossuficiente, arquivo único) | 59,0 MB · SHA-256 `e6e5c50de17a0a6862bbef710e477ff3dc52495ada60b0fd9238a9d87c4cbfb6` · **sem assinatura** |
-| `Tersus-Setup-0.3.0-x64.exe` (Inno Setup 6.7.1, por usuário) | SHA-256 `227df2668ff175b95ced5eada365d25d6dd435ca7c701ab12e8cdd08b1d0e9f3` · **sem assinatura** |
-| Teste de fumaça da interface real, EXE publicado | 22 etapas ok · 0 erros de *binding* · 0 exceções não tratadas · 0 avisos de layout · 23 capturas · **66 verificações independentes ok** |
-| Mesmo teste com o programa **instalado** (sem a etapa da árvore grande) | todas as etapas ok · 22 capturas · 66 verificações independentes ok |
+| `Tersus.exe` (win-x64, autossuficiente, arquivo único) | ≈ 59 MB · SHA-256 no `SHA256SUMS.txt` do pacote · **sem assinatura** |
+| `Tersus-Setup-0.3.0-x64.exe` (Inno Setup 6.7.1, por usuário) | SHA-256 no `SHA256SUMS.txt` do pacote · **sem assinatura** |
+| Teste de fumaça da interface real, EXE publicado | 21 etapas ok · 0 erros de *binding* · 0 exceções não tratadas · 0 avisos de layout · 23 capturas · **66 verificações independentes ok** |
+| Mesmo teste com o programa **instalado** (20 etapas: sem a da árvore grande) | todas as etapas ok · 22 capturas · 66 verificações independentes ok |
 | Instalador: instalar → usar → desinstalar | **26 verificações ok** |
 
-Observação sobre os hashes: eles mudam a cada compilação (o commit entra na versão do arquivo). Confira os que acompanham o artefato que você baixar (`SHA256SUMS.txt`).
+Observação sobre os hashes: eles **não ficam fixados neste documento** porque mudam a cada compilação (o commit entra na versão do arquivo; até uma mudança só de documentação gera hashes novos).
+Confira os que acompanham o artefato que você baixar (`SHA256SUMS.txt`); a descrição do PR traz os da execução mais recente.
 
 ### Medições (EXE publicado, máquina virtual)
 
-- Cancelar a análise da unidade inteira (`C:\`): a tela voltou ao normal em **0,40 s**; a análise parcial **não** entrou no histórico.
-- Árvore grande (`C:\Windows`: 169.964 arquivos, 41.023 pastas, 32,1 GB lógicos, 3 pastas sem permissão):
-  - passada 1, **disco frio**: 48,9 s (≈ 3.480 arquivos/s);
-  - passada 2, **cache quente**: 1,4 s (≈ 119.750 arquivos/s).
-- Memória: pico do conjunto de trabalho **299 MB** (264 MB antes de analisar); memória gerenciada retida depois das análises: 0,2 MB.
-- Interface: o maior intervalo sem resposta do thread da interface durante as análises foi de **63 ms**.
+- Cancelar a análise da unidade inteira (`C:\`): a tela voltou ao normal em **0,01 s** (0,40 s na execução anterior); a análise parcial **não** entrou no histórico.
+- Árvore grande (`C:\Windows`: 169.966 arquivos, 41.025 pastas, 32,1 GB lógicos, 3 pastas sem permissão):
+  - passada 1, **disco frio**: 47,6 s (≈ 3.570 arquivos/s);
+  - passada 2, **cache quente**: 1,6 s (≈ 105.000 arquivos/s).
+- Memória: pico do conjunto de trabalho **297 MB** (263 MB antes de analisar); memória gerenciada retida depois das análises: 0,2 MB.
+- Interface: o maior intervalo sem resposta do thread da interface durante as análises foi de **93 ms**.
 - Programa instalado: janela principal visível **0,9 s** depois de iniciar (provavelmente com as bibliotecas nativas do arquivo único já extraídas pela execução anterior do mesmo arquivo; o tempo de uma primeira execução absoluta não foi medido).
 - Experimento com os threads de listagem: 2 threads levaram 48,8 s e 4 threads 48,9 s no disco frio (uma medição de cada, em VMs diferentes, portanto indicativo); por isso o padrão **não** foi alterado. Nessa máquina o gargalo é o disco.
 
@@ -58,6 +60,7 @@ O script `tools/ci/Invoke-SmokeTest.ps1` prepara uma pasta de teste dentro do TE
 | 7 | 3ª rodada | a limpeza **recusou** rodar: “pasta de dados e pasta TEMP em unidades diferentes” | o roteiro gravava os dados em `D:` e o TEMP está em `C:`. **A recusa é a trava de segurança funcionando** (nada foi movido) | o roteiro usa uma pasta de trabalho na unidade do TEMP e copia as evidências depois |
 | 8 | idem | “esperava 6 candidatos, encontrou 7” | o arquivo **em uso** aparece na busca e na simulação (que só leem, por projeto) e só é barrado pela trava por arquivo na execução | expectativa corrigida (6 movidos + 1 ignorado como `InUse`) e conferida no registro |
 | 9 | última rodada antes da verde final | passo do Inno Setup falhou | `ISCC /?` devolve código 1 e o GitHub propaga o último código | versão lida do registro de desinstalação |
+| 10 | revisão final deste relatório | este documento dizia “22 etapas” no teste de fumaça e citava hashes de uma execução anterior | erro de contagem meu (o relatório do programa lista 21 etapas; 20 no instalado) e hashes que mudam a cada commit | números conferidos linha a linha contra o log da execução de referência; hashes retirados do texto |
 
 ## 4. O que ainda **não** foi provado
 
