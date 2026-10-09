@@ -1,0 +1,15 @@
+﻿Antes de instalar o Tersus
+
+O que o Tersus faz
+- Analisa o uso do armazenamento e mostra de onde vem o espaço. Só lê os dados.
+- A única alteração que ele pode fazer, e somente depois de uma simulação e da sua confirmação, é mover para a Lixeira do Windows arquivos temporários (.tmp e .temp) antigos da pasta TEMP do seu usuário.
+- Nunca esvazia a Lixeira, nunca apaga de forma permanente e nunca mexe em documentos, navegadores, senhas, programas instalados, registro ou arquivos do Windows.
+
+Como este instalador se comporta
+- Instala só para o seu usuário, em %LOCALAPPDATA%\Programs\Tersus, e não pede permissão de administrador.
+- Não inicia junto com o Windows, não cria serviços nem tarefas agendadas.
+- Funciona sem internet e não envia nenhum dado.
+- Ao desinstalar, remove o programa, mas mantém o histórico e os registros de limpeza em %LOCALAPPDATA%\Tersus (são seus; apague a pasta se quiser).
+
+Assinatura digital
+- Este instalador e o programa ainda NÃO são assinados digitalmente e não têm reputação no Windows SmartScreen. O Windows pode mostrar um aviso ao abrir o instalador. Confira o código SHA-256 publicado junto com o arquivo antes de instalar.

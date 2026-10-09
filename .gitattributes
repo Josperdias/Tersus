@@ -3,3 +3,5 @@
 *.png binary
 *.exe binary
 *.zip binary
+
+installer/*.txt text eol=crlf
