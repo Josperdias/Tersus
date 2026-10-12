@@ -1,0 +1,1141 @@
+{
+  "schema": 1,
+  "snapshots": [
+    {
+      "id": "73d16371-92e7-4d66-b606-d0f2e4ea0249",
+      "createdUtc": "2026-10-12T12:12:04.7009663Z",
+      "root": "D:\\a\\Tersus\\Tersus",
+      "totalBytes": 216998958,
+      "fileCount": 611,
+      "volumeUsedBytes": 354119680,
+      "folders": [
+        {
+          "name": "Tersus.App",
+          "bytes": 152090875
+        },
+        {
+          "name": "publish",
+          "bytes": 61910698
+        },
+        {
+          "name": "Tersus.Tests",
+          "bytes": 1613435
+        },
+        {
+          "name": "Tersus.Core",
+          "bytes": 920999
+        },
+        {
+          "name": ".git",
+          "bytes": 333431
+        },
+        {
+          "name": "docs",
+          "bytes": 51830
+        },
+        {
+          "name": "tools",
+          "bytes": 44037
+        },
+        {
+          "name": ".github",
+          "bytes": 14966
+        },
+        {
+          "name": "installer",
+          "bytes": 3529
+        },
+        {
+          "name": "evidencias",
+          "bytes": 0
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 15158
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 141597056
+        },
+        {
+          "name": ".exe",
+          "bytes": 73035306
+        },
+        {
+          "name": ".cs",
+          "bytes": 708688
+        },
+        {
+          "name": ".pdb",
+          "bytes": 436976
+        },
+        {
+          "name": ".pack",
+          "bytes": 281281
+        },
+        {
+          "name": ".json",
+          "bytes": 262721
+        },
+        {
+          "name": ".resources",
+          "bytes": 164610
+        },
+        {
+          "name": ".baml",
+          "bytes": 129966
+        },
+        {
+          "name": ".xaml",
+          "bytes": 121923
+        },
+        {
+          "name": ".md",
+          "bytes": 57451
+        },
+        {
+          "name": ".ps1",
+          "bytes": 40643
+        },
+        {
+          "name": ".txt",
+          "bytes": 36377
+        },
+        {
+          "name": ".sample",
+          "bytes": 26788
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 19343
+        },
+        {
+          "name": ".yml",
+          "bytes": 17082
+        },
+        {
+          "name": ".ico",
+          "bytes": 16122
+        },
+        {
+          "name": ".cache",
+          "bytes": 12406
+        },
+        {
+          "name": ".props",
+          "bytes": 6229
+        },
+        {
+          "name": ".idx",
+          "bytes": 6224
+        },
+        {
+          "name": ".editorconfig",
+          "bytes": 6031
+        }
+      ]
+    },
+    {
+      "id": "e7032f16-0b91-4bdb-a750-ce52979399e8",
+      "createdUtc": "2026-10-12T12:12:09.9210928Z",
+      "root": "D:\\a\\Tersus\\Tersus",
+      "totalBytes": 216998958,
+      "fileCount": 611,
+      "volumeUsedBytes": 354123776,
+      "folders": [
+        {
+          "name": "Tersus.App",
+          "bytes": 152090875
+        },
+        {
+          "name": "publish",
+          "bytes": 61910698
+        },
+        {
+          "name": "Tersus.Tests",
+          "bytes": 1613435
+        },
+        {
+          "name": "Tersus.Core",
+          "bytes": 920999
+        },
+        {
+          "name": ".git",
+          "bytes": 333431
+        },
+        {
+          "name": "docs",
+          "bytes": 51830
+        },
+        {
+          "name": "tools",
+          "bytes": 44037
+        },
+        {
+          "name": ".github",
+          "bytes": 14966
+        },
+        {
+          "name": "installer",
+          "bytes": 3529
+        },
+        {
+          "name": "evidencias",
+          "bytes": 0
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 15158
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 141597056
+        },
+        {
+          "name": ".exe",
+          "bytes": 73035306
+        },
+        {
+          "name": ".cs",
+          "bytes": 708688
+        },
+        {
+          "name": ".pdb",
+          "bytes": 436976
+        },
+        {
+          "name": ".pack",
+          "bytes": 281281
+        },
+        {
+          "name": ".json",
+          "bytes": 262721
+        },
+        {
+          "name": ".resources",
+          "bytes": 164610
+        },
+        {
+          "name": ".baml",
+          "bytes": 129966
+        },
+        {
+          "name": ".xaml",
+          "bytes": 121923
+        },
+        {
+          "name": ".md",
+          "bytes": 57451
+        },
+        {
+          "name": ".ps1",
+          "bytes": 40643
+        },
+        {
+          "name": ".txt",
+          "bytes": 36377
+        },
+        {
+          "name": ".sample",
+          "bytes": 26788
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 19343
+        },
+        {
+          "name": ".yml",
+          "bytes": 17082
+        },
+        {
+          "name": ".ico",
+          "bytes": 16122
+        },
+        {
+          "name": ".cache",
+          "bytes": 12406
+        },
+        {
+          "name": ".props",
+          "bytes": 6229
+        },
+        {
+          "name": ".idx",
+          "bytes": 6224
+        },
+        {
+          "name": ".editorconfig",
+          "bytes": 6031
+        }
+      ]
+    },
+    {
+      "id": "2680430c-680a-43af-80e7-8db2eacba38b",
+      "createdUtc": "2026-10-12T12:12:49.3004863Z",
+      "root": "C:\\Windows",
+      "totalBytes": 34695000384,
+      "fileCount": 169972,
+      "volumeUsedBytes": 130197819392,
+      "folders": [
+        {
+          "name": "WinSxS",
+          "bytes": 12449058900
+        },
+        {
+          "name": "Installer",
+          "bytes": 5990455588
+        },
+        {
+          "name": "assembly",
+          "bytes": 5909942663
+        },
+        {
+          "name": "System32",
+          "bytes": 5238718166
+        },
+        {
+          "name": "SystemApps",
+          "bytes": 1205997578
+        },
+        {
+          "name": "SysWOW64",
+          "bytes": 1163617655
+        },
+        {
+          "name": "Microsoft.NET",
+          "bytes": 862246392
+        },
+        {
+          "name": "Fonts",
+          "bytes": 428713410
+        },
+        {
+          "name": "SystemResources",
+          "bytes": 219107421
+        },
+        {
+          "name": "servicing",
+          "bytes": 200836662
+        },
+        {
+          "name": "IME",
+          "bytes": 114277114
+        },
+        {
+          "name": "Speech",
+          "bytes": 107841010
+        },
+        {
+          "name": "Globalization",
+          "bytes": 89432825
+        },
+        {
+          "name": "INF",
+          "bytes": 83651885
+        },
+        {
+          "name": "Boot",
+          "bytes": 77886023
+        },
+        {
+          "name": "Logs",
+          "bytes": 69934948
+        },
+        {
+          "name": "Speech_OneCore",
+          "bytes": 68526336
+        },
+        {
+          "name": "ServiceProfiles",
+          "bytes": 55227628
+        },
+        {
+          "name": "UUS",
+          "bytes": 46922235
+        },
+        {
+          "name": "SoftwareDistribution",
+          "bytes": 40248249
+        },
+        {
+          "name": "InputMethod",
+          "bytes": 38301201
+        },
+        {
+          "name": "Web",
+          "bytes": 31035956
+        },
+        {
+          "name": "Media",
+          "bytes": 24068579
+        },
+        {
+          "name": "ImmersiveControlPanel",
+          "bytes": 23811091
+        },
+        {
+          "name": "apppatch",
+          "bytes": 19474482
+        },
+        {
+          "name": "SystemTemp",
+          "bytes": 16621474
+        },
+        {
+          "name": "ShellExperiences",
+          "bytes": 15172608
+        },
+        {
+          "name": "AppCompat",
+          "bytes": 12332636
+        },
+        {
+          "name": "Cursors",
+          "bytes": 11501377
+        },
+        {
+          "name": "ADFS",
+          "bytes": 7682048
+        },
+        {
+          "name": "PolicyDefinitions",
+          "bytes": 7382895
+        },
+        {
+          "name": "security",
+          "bytes": 6620873
+        },
+        {
+          "name": "OEM",
+          "bytes": 6511575
+        },
+        {
+          "name": "AzureArcSetup",
+          "bytes": 6023034
+        },
+        {
+          "name": "ShellComponents",
+          "bytes": 5819904
+        },
+        {
+          "name": "diagnostics",
+          "bytes": 4348957
+        },
+        {
+          "name": "Help",
+          "bytes": 4293719
+        },
+        {
+          "name": "Provisioning",
+          "bytes": 4043027
+        },
+        {
+          "name": "SKB",
+          "bytes": 3757408
+        },
+        {
+          "name": "WindowsAdminCenterSetup",
+          "bytes": 3679830
+        },
+        {
+          "name": "resources",
+          "bytes": 3386090
+        },
+        {
+          "name": "rescache",
+          "bytes": 2371768
+        },
+        {
+          "name": "Panther",
+          "bytes": 1302928
+        },
+        {
+          "name": "PLA",
+          "bytes": 1121019
+        },
+        {
+          "name": "DiagTrack",
+          "bytes": 1106226
+        },
+        {
+          "name": "schemas",
+          "bytes": 706723
+        },
+        {
+          "name": "SecureBoot",
+          "bytes": 469786
+        },
+        {
+          "name": "BrowserCore",
+          "bytes": 359738
+        },
+        {
+          "name": "Microsoft",
+          "bytes": 328631
+        },
+        {
+          "name": "OCR",
+          "bytes": 219754
+        },
+        {
+          "name": "WaaS",
+          "bytes": 132812
+        },
+        {
+          "name": "Branding",
+          "bytes": 129552
+        },
+        {
+          "name": "en-US",
+          "bytes": 94720
+        },
+        {
+          "name": "L2Schemas",
+          "bytes": 67737
+        },
+        {
+          "name": "IdentityCRL",
+          "bytes": 33415
+        },
+        {
+          "name": "ServiceState",
+          "bytes": 32768
+        },
+        {
+          "name": "System",
+          "bytes": 31039
+        },
+        {
+          "name": "Registration",
+          "bytes": 22588
+        },
+        {
+          "name": "ELAMBKUP",
+          "bytes": 20880
+        },
+        {
+          "name": "symbols",
+          "bytes": 13824
+        },
+        {
+          "name": "Vss",
+          "bytes": 12420
+        },
+        {
+          "name": "mbcab",
+          "bytes": 11274
+        },
+        {
+          "name": "twain_32",
+          "bytes": 9728
+        },
+        {
+          "name": "Temp",
+          "bytes": 9343
+        },
+        {
+          "name": "debug",
+          "bytes": 3669
+        },
+        {
+          "name": "Migration",
+          "bytes": 3515
+        },
+        {
+          "name": "Setup",
+          "bytes": 403
+        },
+        {
+          "name": "Offline Web Pages",
+          "bytes": 65
+        },
+        {
+          "name": "Downloaded Program Files",
+          "bytes": 65
+        },
+        {
+          "name": "Tasks",
+          "bytes": 6
+        },
+        {
+          "name": "bcastdvr",
+          "bytes": 0
+        },
+        {
+          "name": "tracing",
+          "bytes": 0
+        },
+        {
+          "name": "CbsTemp",
+          "bytes": 0
+        },
+        {
+          "name": "Performance",
+          "bytes": 0
+        },
+        {
+          "name": "DigitalLocker",
+          "bytes": 0
+        },
+        {
+          "name": "drivers",
+          "bytes": 0
+        },
+        {
+          "name": "SchCache",
+          "bytes": 0
+        },
+        {
+          "name": "RemotePackages",
+          "bytes": 0
+        },
+        {
+          "name": "LanguageOverlayCache",
+          "bytes": 0
+        },
+        {
+          "name": "LiveKernelReports",
+          "bytes": 0
+        },
+        {
+          "name": "Prefetch",
+          "bytes": 0
+        },
+        {
+          "name": "ModemLogs",
+          "bytes": 0
+        },
+        {
+          "name": "TAPI",
+          "bytes": 0
+        },
+        {
+          "name": "AppReadiness",
+          "bytes": 0
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 7872536
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 18514274278
+        },
+        {
+          "name": ".msi",
+          "bytes": 5956822918
+        },
+        {
+          "name": ".exe",
+          "bytes": 1720573088
+        },
+        {
+          "name": ".ttc",
+          "bytes": 660699843
+        },
+        {
+          "name": ".cab",
+          "bytes": 608720649
+        },
+        {
+          "name": ".sys",
+          "bytes": 557961172
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 511707870
+        },
+        {
+          "name": ".pak",
+          "bytes": 498892512
+        },
+        {
+          "name": ".vdm",
+          "bytes": 457830762
+        },
+        {
+          "name": ".cat",
+          "bytes": 440058825
+        },
+        {
+          "name": ".ttf",
+          "bytes": 404787093
+        },
+        {
+          "name": ".dat",
+          "bytes": 385374204
+        },
+        {
+          "name": ".mun",
+          "bytes": 375496153
+        },
+        {
+          "name": ".mui",
+          "bytes": 299422035
+        },
+        {
+          "name": ".log1",
+          "bytes": 196669440
+        },
+        {
+          "name": ".evtx",
+          "bytes": 152408064
+        },
+        {
+          "name": ".pri",
+          "bytes": 138681673
+        },
+        {
+          "name": ".dic",
+          "bytes": 110150464
+        },
+        {
+          "name": ".ngr",
+          "bytes": 108962120
+        },
+        {
+          "name": ".imd",
+          "bytes": 105258936
+        }
+      ]
+    },
+    {
+      "id": "4cbf9e50-1808-412f-8872-21b4dcfcc7f9",
+      "createdUtc": "2026-10-12T12:12:50.3500733Z",
+      "root": "C:\\Windows",
+      "totalBytes": 34695000384,
+      "fileCount": 169972,
+      "volumeUsedBytes": 130197827584,
+      "folders": [
+        {
+          "name": "WinSxS",
+          "bytes": 12449058900
+        },
+        {
+          "name": "Installer",
+          "bytes": 5990455588
+        },
+        {
+          "name": "assembly",
+          "bytes": 5909942663
+        },
+        {
+          "name": "System32",
+          "bytes": 5238718166
+        },
+        {
+          "name": "SystemApps",
+          "bytes": 1205997578
+        },
+        {
+          "name": "SysWOW64",
+          "bytes": 1163617655
+        },
+        {
+          "name": "Microsoft.NET",
+          "bytes": 862246392
+        },
+        {
+          "name": "Fonts",
+          "bytes": 428713410
+        },
+        {
+          "name": "SystemResources",
+          "bytes": 219107421
+        },
+        {
+          "name": "servicing",
+          "bytes": 200836662
+        },
+        {
+          "name": "IME",
+          "bytes": 114277114
+        },
+        {
+          "name": "Speech",
+          "bytes": 107841010
+        },
+        {
+          "name": "Globalization",
+          "bytes": 89432825
+        },
+        {
+          "name": "INF",
+          "bytes": 83651885
+        },
+        {
+          "name": "Boot",
+          "bytes": 77886023
+        },
+        {
+          "name": "Logs",
+          "bytes": 69934948
+        },
+        {
+          "name": "Speech_OneCore",
+          "bytes": 68526336
+        },
+        {
+          "name": "ServiceProfiles",
+          "bytes": 55227628
+        },
+        {
+          "name": "UUS",
+          "bytes": 46922235
+        },
+        {
+          "name": "SoftwareDistribution",
+          "bytes": 40248249
+        },
+        {
+          "name": "InputMethod",
+          "bytes": 38301201
+        },
+        {
+          "name": "Web",
+          "bytes": 31035956
+        },
+        {
+          "name": "Media",
+          "bytes": 24068579
+        },
+        {
+          "name": "ImmersiveControlPanel",
+          "bytes": 23811091
+        },
+        {
+          "name": "apppatch",
+          "bytes": 19474482
+        },
+        {
+          "name": "SystemTemp",
+          "bytes": 16621474
+        },
+        {
+          "name": "ShellExperiences",
+          "bytes": 15172608
+        },
+        {
+          "name": "AppCompat",
+          "bytes": 12332636
+        },
+        {
+          "name": "Cursors",
+          "bytes": 11501377
+        },
+        {
+          "name": "ADFS",
+          "bytes": 7682048
+        },
+        {
+          "name": "PolicyDefinitions",
+          "bytes": 7382895
+        },
+        {
+          "name": "security",
+          "bytes": 6620873
+        },
+        {
+          "name": "OEM",
+          "bytes": 6511575
+        },
+        {
+          "name": "AzureArcSetup",
+          "bytes": 6023034
+        },
+        {
+          "name": "ShellComponents",
+          "bytes": 5819904
+        },
+        {
+          "name": "diagnostics",
+          "bytes": 4348957
+        },
+        {
+          "name": "Help",
+          "bytes": 4293719
+        },
+        {
+          "name": "Provisioning",
+          "bytes": 4043027
+        },
+        {
+          "name": "SKB",
+          "bytes": 3757408
+        },
+        {
+          "name": "WindowsAdminCenterSetup",
+          "bytes": 3679830
+        },
+        {
+          "name": "resources",
+          "bytes": 3386090
+        },
+        {
+          "name": "rescache",
+          "bytes": 2371768
+        },
+        {
+          "name": "Panther",
+          "bytes": 1302928
+        },
+        {
+          "name": "PLA",
+          "bytes": 1121019
+        },
+        {
+          "name": "DiagTrack",
+          "bytes": 1106226
+        },
+        {
+          "name": "schemas",
+          "bytes": 706723
+        },
+        {
+          "name": "SecureBoot",
+          "bytes": 469786
+        },
+        {
+          "name": "BrowserCore",
+          "bytes": 359738
+        },
+        {
+          "name": "Microsoft",
+          "bytes": 328631
+        },
+        {
+          "name": "OCR",
+          "bytes": 219754
+        },
+        {
+          "name": "WaaS",
+          "bytes": 132812
+        },
+        {
+          "name": "Branding",
+          "bytes": 129552
+        },
+        {
+          "name": "en-US",
+          "bytes": 94720
+        },
+        {
+          "name": "L2Schemas",
+          "bytes": 67737
+        },
+        {
+          "name": "IdentityCRL",
+          "bytes": 33415
+        },
+        {
+          "name": "ServiceState",
+          "bytes": 32768
+        },
+        {
+          "name": "System",
+          "bytes": 31039
+        },
+        {
+          "name": "Registration",
+          "bytes": 22588
+        },
+        {
+          "name": "ELAMBKUP",
+          "bytes": 20880
+        },
+        {
+          "name": "symbols",
+          "bytes": 13824
+        },
+        {
+          "name": "Vss",
+          "bytes": 12420
+        },
+        {
+          "name": "mbcab",
+          "bytes": 11274
+        },
+        {
+          "name": "twain_32",
+          "bytes": 9728
+        },
+        {
+          "name": "Temp",
+          "bytes": 9343
+        },
+        {
+          "name": "debug",
+          "bytes": 3669
+        },
+        {
+          "name": "Migration",
+          "bytes": 3515
+        },
+        {
+          "name": "Setup",
+          "bytes": 403
+        },
+        {
+          "name": "Offline Web Pages",
+          "bytes": 65
+        },
+        {
+          "name": "Downloaded Program Files",
+          "bytes": 65
+        },
+        {
+          "name": "Tasks",
+          "bytes": 6
+        },
+        {
+          "name": "tracing",
+          "bytes": 0
+        },
+        {
+          "name": "CbsTemp",
+          "bytes": 0
+        },
+        {
+          "name": "bcastdvr",
+          "bytes": 0
+        },
+        {
+          "name": "Performance",
+          "bytes": 0
+        },
+        {
+          "name": "drivers",
+          "bytes": 0
+        },
+        {
+          "name": "TAPI",
+          "bytes": 0
+        },
+        {
+          "name": "SchCache",
+          "bytes": 0
+        },
+        {
+          "name": "LiveKernelReports",
+          "bytes": 0
+        },
+        {
+          "name": "LanguageOverlayCache",
+          "bytes": 0
+        },
+        {
+          "name": "RemotePackages",
+          "bytes": 0
+        },
+        {
+          "name": "Prefetch",
+          "bytes": 0
+        },
+        {
+          "name": "ModemLogs",
+          "bytes": 0
+        },
+        {
+          "name": "DigitalLocker",
+          "bytes": 0
+        },
+        {
+          "name": "AppReadiness",
+          "bytes": 0
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 7872536
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 18514274278
+        },
+        {
+          "name": ".msi",
+          "bytes": 5956822918
+        },
+        {
+          "name": ".exe",
+          "bytes": 1720573088
+        },
+        {
+          "name": ".ttc",
+          "bytes": 660699843
+        },
+        {
+          "name": ".cab",
+          "bytes": 608720649
+        },
+        {
+          "name": ".sys",
+          "bytes": 557961172
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 511707870
+        },
+        {
+          "name": ".pak",
+          "bytes": 498892512
+        },
+        {
+          "name": ".vdm",
+          "bytes": 457830762
+        },
+        {
+          "name": ".cat",
+          "bytes": 440058825
+        },
+        {
+          "name": ".ttf",
+          "bytes": 404787093
+        },
+        {
+          "name": ".dat",
+          "bytes": 385374204
+        },
+        {
+          "name": ".mun",
+          "bytes": 375496153
+        },
+        {
+          "name": ".mui",
+          "bytes": 299422035
+        },
+        {
+          "name": ".log1",
+          "bytes": 196669440
+        },
+        {
+          "name": ".evtx",
+          "bytes": 152408064
+        },
+        {
+          "name": ".pri",
+          "bytes": 138681673
+        },
+        {
+          "name": ".dic",
+          "bytes": 110150464
+        },
+        {
+          "name": ".ngr",
+          "bytes": 108962120
+        },
+        {
+          "name": ".imd",
+          "bytes": 105258936
+        }
+      ]
+    }
+  ]
+}

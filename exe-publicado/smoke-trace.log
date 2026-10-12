@@ -1,0 +1,42 @@
+0.87s > Início: janela e unidades
+0.90s < ok: Início: janela e unidades
+0.90s > Análise de armazenamento
+1.20s < ok: Análise de armazenamento
+1.20s > Visão geral e mapa de blocos
+1.87s < ok: Visão geral e mapa de blocos
+1.87s > Maiores arquivos
+2.42s < ok: Maiores arquivos
+2.42s > Duplicados (somente relatório)
+2.93s < ok: Duplicados (somente relatório)
+2.93s > Limpeza: tela e regras
+3.24s < ok: Limpeza: tela e regras
+3.24s > Limpeza: buscar candidatos na pasta de teste
+3.69s < ok: Limpeza: buscar candidatos na pasta de teste
+3.69s > Limpeza: modo por objetivo e seleção personalizada invalidam a simulação
+4.01s < ok: Limpeza: modo por objetivo e seleção personalizada invalidam a simulação
+4.01s > Limpeza: simulação não altera nada
+4.36s < ok: Limpeza: simulação não altera nada
+4.36s > Janela de confirmação: propriedades de segurança
+4.92s < ok: Janela de confirmação: propriedades de segurança
+4.92s > Limpeza: cancelar a confirmação não move nada
+5.10s < ok: Limpeza: cancelar a confirmação não move nada
+5.10s > Limpeza: confirmar move os arquivos elegíveis para a Lixeira
+5.67s < ok: Limpeza: confirmar move os arquivos elegíveis para a Lixeira
+5.67s > Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado
+5.87s < ok: Limpeza: repetir a busca depois de limpar só encontra o que foi ignorado
+5.87s > Aplicativos instalados (leitura)
+6.16s < ok: Aplicativos instalados (leitura)
+6.16s > Histórico (duas análises e comparação)
+6.36s < ok: Histórico (duas análises e comparação)
+6.36s > Recomendações (somente leitura)
+6.60s < ok: Recomendações (somente leitura)
+6.60s > Segurança e sobre
+6.80s < ok: Segurança e sobre
+6.80s > Cancelamento da análise (responde em poucos segundos e não vai ao histórico)
+8.68s < ok: Cancelamento da análise (responde em poucos segundos e não vai ao histórico)
+8.68s > Árvore grande: memória, tempo e responsividade da interface (disco frio, depois cache quente)
+46.94s < ok: Árvore grande: memória, tempo e responsividade da interface (disco frio, depois cache quente)
+46.94s > Zoom da interface (140%)
+47.34s < ok: Zoom da interface (140%)
+47.35s > Paleta de alto contraste (troca e volta)
+47.90s < ok: Paleta de alto contraste (troca e volta)

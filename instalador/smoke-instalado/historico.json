@@ -1,0 +1,285 @@
+{
+  "schema": 1,
+  "snapshots": [
+    {
+      "id": "c30e28b0-5c85-46f9-9049-f63ad72822d4",
+      "createdUtc": "2026-10-12T12:13:06.4787746Z",
+      "root": "D:\\a\\Tersus\\Tersus",
+      "totalBytes": 277122903,
+      "fileCount": 641,
+      "volumeUsedBytes": 414609408,
+      "folders": [
+        {
+          "name": "Tersus.App",
+          "bytes": 152090875
+        },
+        {
+          "name": "publish",
+          "bytes": 61910698
+        },
+        {
+          "name": "dist",
+          "bytes": 56852448
+        },
+        {
+          "name": "evidencias",
+          "bytes": 3271497
+        },
+        {
+          "name": "Tersus.Tests",
+          "bytes": 1613435
+        },
+        {
+          "name": "Tersus.Core",
+          "bytes": 920999
+        },
+        {
+          "name": ".git",
+          "bytes": 333431
+        },
+        {
+          "name": "docs",
+          "bytes": 51830
+        },
+        {
+          "name": "tools",
+          "bytes": 44037
+        },
+        {
+          "name": ".github",
+          "bytes": 14966
+        },
+        {
+          "name": "installer",
+          "bytes": 3529
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 15158
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 141597056
+        },
+        {
+          "name": ".exe",
+          "bytes": 129887754
+        },
+        {
+          "name": ".png",
+          "bytes": 3233210
+        },
+        {
+          "name": ".cs",
+          "bytes": 708688
+        },
+        {
+          "name": ".pdb",
+          "bytes": 436976
+        },
+        {
+          "name": ".json",
+          "bytes": 286179
+        },
+        {
+          "name": ".pack",
+          "bytes": 281281
+        },
+        {
+          "name": ".resources",
+          "bytes": 164610
+        },
+        {
+          "name": ".baml",
+          "bytes": 129966
+        },
+        {
+          "name": ".xaml",
+          "bytes": 121923
+        },
+        {
+          "name": ".md",
+          "bytes": 64859
+        },
+        {
+          "name": ".ps1",
+          "bytes": 40643
+        },
+        {
+          "name": ".txt",
+          "bytes": 36377
+        },
+        {
+          "name": ".sample",
+          "bytes": 26788
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 19343
+        },
+        {
+          "name": ".yml",
+          "bytes": 17082
+        },
+        {
+          "name": ".ico",
+          "bytes": 16122
+        },
+        {
+          "name": ".cache",
+          "bytes": 12406
+        },
+        {
+          "name": ".log",
+          "bytes": 7421
+        },
+        {
+          "name": ".props",
+          "bytes": 6229
+        }
+      ]
+    },
+    {
+      "id": "98f777e8-3c0e-47a8-9d52-187ae1f674bf",
+      "createdUtc": "2026-10-12T12:13:11.4664794Z",
+      "root": "D:\\a\\Tersus\\Tersus",
+      "totalBytes": 277122903,
+      "fileCount": 641,
+      "volumeUsedBytes": 414609408,
+      "folders": [
+        {
+          "name": "Tersus.App",
+          "bytes": 152090875
+        },
+        {
+          "name": "publish",
+          "bytes": 61910698
+        },
+        {
+          "name": "dist",
+          "bytes": 56852448
+        },
+        {
+          "name": "evidencias",
+          "bytes": 3271497
+        },
+        {
+          "name": "Tersus.Tests",
+          "bytes": 1613435
+        },
+        {
+          "name": "Tersus.Core",
+          "bytes": 920999
+        },
+        {
+          "name": ".git",
+          "bytes": 333431
+        },
+        {
+          "name": "docs",
+          "bytes": 51830
+        },
+        {
+          "name": "tools",
+          "bytes": 44037
+        },
+        {
+          "name": ".github",
+          "bytes": 14966
+        },
+        {
+          "name": "installer",
+          "bytes": 3529
+        },
+        {
+          "name": "(arquivos soltos na raiz)",
+          "bytes": 15158
+        }
+      ],
+      "extensions": [
+        {
+          "name": ".dll",
+          "bytes": 141597056
+        },
+        {
+          "name": ".exe",
+          "bytes": 129887754
+        },
+        {
+          "name": ".png",
+          "bytes": 3233210
+        },
+        {
+          "name": ".cs",
+          "bytes": 708688
+        },
+        {
+          "name": ".pdb",
+          "bytes": 436976
+        },
+        {
+          "name": ".json",
+          "bytes": 286179
+        },
+        {
+          "name": ".pack",
+          "bytes": 281281
+        },
+        {
+          "name": ".resources",
+          "bytes": 164610
+        },
+        {
+          "name": ".baml",
+          "bytes": 129966
+        },
+        {
+          "name": ".xaml",
+          "bytes": 121923
+        },
+        {
+          "name": ".md",
+          "bytes": 64859
+        },
+        {
+          "name": ".ps1",
+          "bytes": 40643
+        },
+        {
+          "name": ".txt",
+          "bytes": 36377
+        },
+        {
+          "name": ".sample",
+          "bytes": 26788
+        },
+        {
+          "name": "(sem extens\u00E3o)",
+          "bytes": 19343
+        },
+        {
+          "name": ".yml",
+          "bytes": 17082
+        },
+        {
+          "name": ".ico",
+          "bytes": 16122
+        },
+        {
+          "name": ".cache",
+          "bytes": 12406
+        },
+        {
+          "name": ".log",
+          "bytes": 7421
+        },
+        {
+          "name": ".props",
+          "bytes": 6229
+        }
+      ]
+    }
+  ]
+}
